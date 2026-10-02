@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 960">
+  <!-- Generic coffee scale with a cup on top. -->
+  <path d="M370 250h220v170c0 50-40 90-90 90h-40c-50 0-90-40-90-90z" fill="#000"/>
+  <path d="M590 290h40a60 60 0 0 1 0 120h-40v-40h40a20 20 0 0 0 0-40h-40z" fill="#000"/>
+  <rect x="200" y="560" width="560" height="170" rx="40" fill="#000"/>
+  <rect x="300" y="530" width="360" height="40" rx="16" fill="#000"/>
+  <rect x="290" y="610" width="200" height="70" rx="14" fill="#fff"/>
+  <circle cx="620" cy="645" r="30" fill="#fff"/>
+</svg>

@@ -1,0 +1,48 @@
+{
+  "stamp": "2026-10-02T07:43:59.275Z",
+  "rows": 1,
+  "items": [
+    {
+      "deviceId": "SCALE-1",
+      "deviceType": "BREWER",
+      "deviceClass": "SCALE",
+      "serial": "SCALE-1",
+      "companyId": "COMPANY-1",
+      "type": "scale",
+      "created": {
+        "user": "user@example.com",
+        "date": "2026-09-24T14:02:15.671Z"
+      },
+      "change": {
+        "user": "user@example.com",
+        "date": "2026-09-24T14:02:15.671Z"
+      },
+      "bindings": [
+        {
+          "fromDeviceId": "SCALE-1",
+          "toDeviceId": "GRINDER-1",
+          "fromType": "BREWER",
+          "toGrinderId": "GRINDER-1",
+          "toDevice": {
+            "deviceId": "GRINDER-1",
+            "deviceType": "GRINDER",
+            "deviceClass": "GRINDER",
+            "serial": "SERIAL-1",
+            "companyId": "COMPANY-1",
+            "testDevice": false,
+            "type": "E64WS",
+            "subType": "Espresso",
+            "created": {
+              "user": "user@example.com",
+              "date": "2026-09-26T15:33:56.572Z"
+            },
+            "change": {
+              "user": "user@example.com",
+              "date": "2026-09-26T15:33:56.572Z"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

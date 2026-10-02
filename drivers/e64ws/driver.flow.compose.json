@@ -1,0 +1,145 @@
+{
+  "triggers": [
+    {
+      "id": "grind_completed",
+      "title": {
+        "en": "Grind completed",
+        "nl": "Maalbeurt voltooid"
+      },
+      "hint": {
+        "en": "Fires once for every grind, purges included. Use the \"Is purge\" token to leave purges out.",
+        "nl": "Gaat één keer af voor elke maalbeurt, ook voor purges. Gebruik de token \"Is purge\" om purges over te slaan."
+      },
+      "tokens": [
+        {
+          "name": "dose",
+          "type": "number",
+          "title": {
+            "en": "Dose (g)",
+            "nl": "Dosis (g)"
+          },
+          "example": 18.1
+        },
+        {
+          "name": "grind_setting",
+          "type": "number",
+          "title": {
+            "en": "Grind setting",
+            "nl": "Maalstand"
+          },
+          "example": 140
+        },
+        {
+          "name": "grind_time",
+          "type": "number",
+          "title": {
+            "en": "Grind time (s)",
+            "nl": "Maaltijd (s)"
+          },
+          "example": 7.9
+        },
+        {
+          "name": "started_via",
+          "type": "string",
+          "title": {
+            "en": "Started via",
+            "nl": "Gestart via"
+          },
+          "example": "PortafilterDetection"
+        },
+        {
+          "name": "is_purge",
+          "type": "boolean",
+          "title": {
+            "en": "Is purge",
+            "nl": "Is purge"
+          },
+          "example": false
+        }
+      ]
+    },
+    {
+      "id": "shot_completed",
+      "title": {
+        "en": "Shot completed",
+        "nl": "Shot voltooid"
+      },
+      "hint": {
+        "en": "Fires when the paired Sync Scale reports a shot. Dose and ratio come from the last grind (not a purge) up to 15 minutes before the shot, and are 0 when there was none.",
+        "nl": "Gaat af wanneer de gekoppelde Sync Scale een shot meldt. Dosis en verhouding komen van de laatste maalbeurt (geen purge) tot 15 minuten voor de shot, en zijn 0 als die er niet was."
+      },
+      "tokens": [
+        {
+          "name": "yield",
+          "type": "number",
+          "title": {
+            "en": "Yield (g)",
+            "nl": "Yield (g)"
+          },
+          "example": 36.4
+        },
+        {
+          "name": "shot_time",
+          "type": "number",
+          "title": {
+            "en": "Shot time (s)",
+            "nl": "Shottijd (s)"
+          },
+          "example": 27.5
+        },
+        {
+          "name": "dose",
+          "type": "number",
+          "title": {
+            "en": "Dose (g)",
+            "nl": "Dosis (g)"
+          },
+          "example": 18.1
+        },
+        {
+          "name": "ratio",
+          "type": "number",
+          "title": {
+            "en": "Ratio",
+            "nl": "Verhouding"
+          },
+          "example": 2.01
+        }
+      ]
+    }
+  ],
+  "conditions": [
+    {
+      "id": "last_grind_within",
+      "title": {
+        "en": "Last grind was less than … minutes ago",
+        "nl": "Laatste maalbeurt was minder dan … minuten geleden"
+      },
+      "titleFormatted": {
+        "en": "Last grind was !{{less|more}} than [[minutes]] minutes ago",
+        "nl": "Laatste maalbeurt was !{{minder|meer}} dan [[minutes]] minuten geleden"
+      },
+      "hint": {
+        "en": "Purges don't count.",
+        "nl": "Purges tellen niet mee."
+      },
+      "args": [
+        {
+          "name": "minutes",
+          "type": "number",
+          "title": {
+            "en": "Minutes",
+            "nl": "Minuten"
+          },
+          "min": 1,
+          "max": 1440,
+          "step": 1,
+          "placeholder": {
+            "en": "minutes",
+            "nl": "minuten"
+          }
+        }
+      ]
+    }
+  ]
+}

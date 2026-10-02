@@ -1,0 +1,35 @@
+{
+  "triggers": [
+    {
+      "id": "scale_shot_completed",
+      "title": {
+        "en": "Shot completed",
+        "nl": "Shot voltooid"
+      },
+      "hint": {
+        "en": "Fires once for every shot the Sync Scale reports.",
+        "nl": "Gaat één keer af voor elke shot die de Sync Scale meldt."
+      },
+      "tokens": [
+        {
+          "name": "yield",
+          "type": "number",
+          "title": {
+            "en": "Yield (g)",
+            "nl": "Yield (g)"
+          },
+          "example": 36.4
+        },
+        {
+          "name": "shot_time",
+          "type": "number",
+          "title": {
+            "en": "Shot time (s)",
+            "nl": "Shottijd (s)"
+          },
+          "example": 27.5
+        }
+      ]
+    }
+  ]
+}

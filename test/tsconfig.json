@@ -1,0 +1,17 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": ".."
+  },
+  "include": [
+    "**/*.mts",
+    "../*.mts",
+    "../lib/**/*.mts",
+    "../drivers/**/*.mts"
+  ],
+  "exclude": [
+    "../node_modules",
+    "../.homeybuild"
+  ]
+}

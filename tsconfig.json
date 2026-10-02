@@ -1,0 +1,16 @@
+{
+  "extends": "@tsconfig/node22/tsconfig.json",
+  "compilerOptions": {
+    "outDir": ".homeybuild/",
+    "types": [
+      "homey",
+      "node"
+    ]
+  },
+  "exclude": [
+    "node_modules",
+    ".homeybuild",
+    "test",
+    "scripts"
+  ]
+}

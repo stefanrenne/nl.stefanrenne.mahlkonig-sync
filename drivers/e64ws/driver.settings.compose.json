@@ -1,0 +1,96 @@
+[
+  {
+    "type": "group",
+    "label": {
+      "en": "Updates",
+      "nl": "Updates"
+    },
+    "children": [
+      {
+        "id": "poll_interval",
+        "type": "number",
+        "label": {
+          "en": "Check every",
+          "nl": "Controleer elke"
+        },
+        "hint": {
+          "en": "How often the app asks the Mahlkönig Sync cloud for new grinds and shots. At least 1 minute.",
+          "nl": "Hoe vaak de app de Mahlkönig Sync-cloud om nieuwe maalbeurten en shots vraagt. Minimaal 1 minuut."
+        },
+        "value": 2,
+        "min": 1,
+        "max": 60,
+        "step": 1,
+        "units": {
+          "en": "minutes",
+          "nl": "minuten"
+        }
+      },
+      {
+        "id": "purge_threshold",
+        "type": "number",
+        "label": {
+          "en": "Purge below",
+          "nl": "Purge onder"
+        },
+        "hint": {
+          "en": "A grind with a dose below this weight counts as a purge. Purges still trigger \"Grind completed\" (with \"Is purge\" set), but don't change the dose, grind setting, grind time or last grind shown on the device.",
+          "nl": "Een maalbeurt met een dosis onder dit gewicht telt als purge. Een purge laat \"Maalbeurt voltooid\" nog steeds afgaan (met \"Is purge\" aan), maar verandert de dosis, maalstand, maaltijd en laatste maalbeurt op het apparaat niet."
+        },
+        "value": 5,
+        "min": 0,
+        "max": 50,
+        "step": 0.5,
+        "units": {
+          "en": "g",
+          "nl": "g"
+        }
+      }
+    ]
+  },
+  {
+    "type": "group",
+    "label": {
+      "en": "Grinder",
+      "nl": "Molen"
+    },
+    "children": [
+      {
+        "id": "model",
+        "type": "label",
+        "label": {
+          "en": "Model",
+          "nl": "Model"
+        },
+        "value": "-"
+      },
+      {
+        "id": "serial",
+        "type": "label",
+        "label": {
+          "en": "Serial number",
+          "nl": "Serienummer"
+        },
+        "value": "-"
+      },
+      {
+        "id": "firmware",
+        "type": "label",
+        "label": {
+          "en": "Firmware",
+          "nl": "Firmware"
+        },
+        "value": "-"
+      },
+      {
+        "id": "scale",
+        "type": "label",
+        "label": {
+          "en": "Sync Scale",
+          "nl": "Sync Scale"
+        },
+        "value": "-"
+      }
+    ]
+  }
+]

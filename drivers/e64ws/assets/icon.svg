@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 960">
+  <!-- Generic espresso grinder: bean hopper, body, spout and portafilter fork. -->
+  <path d="M330 90h300l-50 190H380z" fill="#000"/>
+  <rect x="340" y="300" width="280" height="420" rx="40" fill="#000"/>
+  <rect x="270" y="740" width="420" height="80" rx="30" fill="#000"/>
+  <path d="M450 500h60v70h-60z" fill="#fff"/>
+  <path d="M380 600h200v28H380z" fill="#fff"/>
+  <circle cx="480" cy="400" r="46" fill="#fff"/>
+</svg>

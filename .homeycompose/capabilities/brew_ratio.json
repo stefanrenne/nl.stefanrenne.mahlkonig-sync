@@ -1,0 +1,12 @@
+{
+  "type": "number",
+  "title": {
+    "en": "Brew ratio",
+    "nl": "Verhouding"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "decimals": 2,
+  "insights": true
+}

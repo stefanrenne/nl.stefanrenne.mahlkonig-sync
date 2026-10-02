@@ -1,0 +1,16 @@
+{
+  "errors": {
+    "auth": "Mahlkönig Sync rejected your e-mail or password. Repair the device to sign in again.",
+    "unreachable": "Can't reach Mahlkönig Sync: __message__"
+  },
+  "pair": {
+    "unreachable": "Can't reach Mahlkönig Sync. Check your internet connection and try again.",
+    "noGrinders": "No grinder found in this Mahlkönig Sync account.",
+    "wrongAccount": "This device belongs to another Mahlkönig Sync account.",
+    "noScales": "No Sync Scale found in this Mahlkönig Sync account."
+  },
+  "settings": {
+    "noScale": "Not paired",
+    "noGrinder": "Not paired"
+  }
+}

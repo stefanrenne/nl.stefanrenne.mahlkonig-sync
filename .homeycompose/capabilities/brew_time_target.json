@@ -1,0 +1,16 @@
+{
+  "type": "number",
+  "title": {
+    "en": "Target shot time",
+    "nl": "Doelshottijd"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "units": {
+    "en": "s",
+    "nl": "s"
+  },
+  "decimals": 1,
+  "insights": true
+}

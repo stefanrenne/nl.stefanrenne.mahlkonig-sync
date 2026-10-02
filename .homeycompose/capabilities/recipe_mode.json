@@ -1,0 +1,10 @@
+{
+  "type": "string",
+  "title": {
+    "en": "Recipe mode",
+    "nl": "Receptmodus"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor"
+}

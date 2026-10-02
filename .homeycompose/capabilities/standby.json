@@ -1,0 +1,19 @@
+{
+  "type": "boolean",
+  "title": {
+    "en": "Standby",
+    "nl": "Stand-by"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "insights": true,
+  "insightsTitleTrue": {
+    "en": "Went into standby",
+    "nl": "Ging in stand-by"
+  },
+  "insightsTitleFalse": {
+    "en": "Woke up",
+    "nl": "Werd wakker"
+  }
+}

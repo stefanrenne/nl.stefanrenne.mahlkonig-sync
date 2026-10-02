@@ -1,0 +1,16 @@
+{
+  "type": "number",
+  "title": {
+    "en": "Target dose",
+    "nl": "Doeldosis"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "units": {
+    "en": "g",
+    "nl": "g"
+  },
+  "decimals": 1,
+  "insights": true
+}

@@ -1,0 +1,12 @@
+{
+  "type": "number",
+  "title": {
+    "en": "Disc health",
+    "nl": "Conditie maalschijven"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "decimals": 0,
+  "insights": true
+}

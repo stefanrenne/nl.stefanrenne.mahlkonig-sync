@@ -1,0 +1,16 @@
+{
+  "errors": {
+    "auth": "Mahlkönig Sync heeft je e-mailadres of wachtwoord geweigerd. Repareer het apparaat om opnieuw in te loggen.",
+    "unreachable": "Mahlkönig Sync is niet bereikbaar: __message__"
+  },
+  "pair": {
+    "unreachable": "Mahlkönig Sync is niet bereikbaar. Controleer je internetverbinding en probeer het opnieuw.",
+    "noGrinders": "Geen molen gevonden in dit Mahlkönig Sync-account.",
+    "wrongAccount": "Dit apparaat hoort bij een ander Mahlkönig Sync-account.",
+    "noScales": "Geen Sync Scale gevonden in dit Mahlkönig Sync-account."
+  },
+  "settings": {
+    "noScale": "Niet gekoppeld",
+    "noGrinder": "Niet gekoppeld"
+  }
+}

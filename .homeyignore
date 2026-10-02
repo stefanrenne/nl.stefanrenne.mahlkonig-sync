@@ -1,0 +1,10 @@
+# Development-only files, not part of the app bundle
+/test/
+/scripts/
+/probe-output/
+/docs/
+/vitest.config.mjs
+/eslint.config.mjs
+/env.json
+/node_modules/
+/.homeybuild/

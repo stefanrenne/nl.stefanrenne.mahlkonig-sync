@@ -1,0 +1,38 @@
+{
+  "deviceId": "GRINDER-1",
+  "serial": "SERIAL-1",
+  "companyId": "COMPANY-1",
+  "testDevice": false,
+  "created": {
+    "user": "user@example.com",
+    "date": "2026-09-26T15:33:56.572Z"
+  },
+  "change": {
+    "user": "user@example.com",
+    "date": "2026-09-26T15:33:56.572Z"
+  },
+  "type": "E64WS",
+  "subType": "Espresso",
+  "productionDate": "2026-04-20T19:17:14Z",
+  "assemblyDate": "2026-05-13T08:35:04Z",
+  "hmiHwProductId": "HW-1",
+  "bindingCode": "BIND-1",
+  "status": {
+    "deviceId": "GRINDER-1",
+    "cloudDate": "2026-10-02T07:35:08.429554Z",
+    "deviceDate": "2026-10-02T07:35:08.090Z",
+    "status": {
+      "discUsageTime": 4,
+      "discHealth": 0,
+      "motorTemperature": 34,
+      "motorOnTime": 0,
+      "hmiSwVersion": "V01.16-24",
+      "espSwVersion": "V01.11",
+      "bundleVersion": "10160024",
+      "standbyActive": true,
+      "timeZone": "Europe/Amsterdam"
+    }
+  },
+  "bindings": null,
+  "company": null
+}

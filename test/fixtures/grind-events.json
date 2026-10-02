@@ -1,0 +1,108 @@
+[
+  {
+    "eventUuid": "00000000-0000-4000-8000-000000000002",
+    "name": "Event",
+    "deviceId": "GRINDER-1",
+    "companyId": "COMPANY-1",
+    "cloudDate": "2026-10-02T06:59:43.762260Z",
+    "deviceDate": "2026-10-02T06:59:43.611Z",
+    "localDate": "2026-10-02T08:59:43.611",
+    "payload": {
+      "recipeIndex": 0,
+      "recipeUuid": "00000000-0000-4000-8000-000000000004",
+      "recipeMode": "Gbw",
+      "durationActual": 7926,
+      "durationRecipe": 0,
+      "dddActual": 139,
+      "dddRecipe": 140,
+      "weightActual": 19976,
+      "weightRecipe": 20000,
+      "triggerMode": "PortafilterDetection",
+      "successful": true,
+      "durationNoLoad": 0,
+      "sizeTheoretic": 69,
+      "sizeRecipe": 70,
+      "filterType": "DOUBLE",
+      "brewTimeRecipe": 25000,
+      "recipeIcon": "DoubleCup",
+      "recipeType": "DoubleShot",
+      "recipeM2mLinked": false
+    },
+    "device": {
+      "deviceId": "GRINDER-1",
+      "serial": "SERIAL-1",
+      "companyId": "COMPANY-1",
+      "testDevice": false,
+      "created": {
+        "user": "user@example.com",
+        "date": "2026-09-26T15:33:56.572Z"
+      },
+      "change": {
+        "user": "user@example.com",
+        "date": "2026-09-26T15:33:56.572Z"
+      },
+      "type": "E64WS",
+      "subType": "Espresso",
+      "productionDate": "2026-04-20T19:17:14Z",
+      "assemblyDate": "2026-05-13T08:35:04Z",
+      "hmiHwProductId": "HW-1",
+      "bindingCode": "BIND-1",
+      "status": null,
+      "bindings": null,
+      "company": null
+    }
+  },
+  {
+    "eventUuid": "00000000-0000-4000-8000-000000000001",
+    "name": "Event",
+    "deviceId": "GRINDER-1",
+    "companyId": "COMPANY-1",
+    "cloudDate": "2026-10-02T06:59:09.587806Z",
+    "deviceDate": "2026-10-02T06:59:09.139Z",
+    "localDate": "2026-10-02T08:59:09.139",
+    "payload": {
+      "recipeIndex": 0,
+      "recipeUuid": "00000000-0000-4000-8000-000000000004",
+      "recipeMode": "Gbw",
+      "durationActual": 1432,
+      "durationRecipe": 0,
+      "dddActual": 139,
+      "dddRecipe": 140,
+      "weightActual": 1637,
+      "weightRecipe": 20000,
+      "triggerMode": "StartButton",
+      "successful": true,
+      "durationNoLoad": 0,
+      "sizeTheoretic": 69,
+      "sizeRecipe": 70,
+      "filterType": "DOUBLE",
+      "brewTimeRecipe": 25000,
+      "recipeIcon": "DoubleCup",
+      "recipeType": "DoubleShot",
+      "recipeM2mLinked": false
+    },
+    "device": {
+      "deviceId": "GRINDER-1",
+      "serial": "SERIAL-1",
+      "companyId": "COMPANY-1",
+      "testDevice": false,
+      "created": {
+        "user": "user@example.com",
+        "date": "2026-09-26T15:33:56.572Z"
+      },
+      "change": {
+        "user": "user@example.com",
+        "date": "2026-09-26T15:33:56.572Z"
+      },
+      "type": "E64WS",
+      "subType": "Espresso",
+      "productionDate": "2026-04-20T19:17:14Z",
+      "assemblyDate": "2026-05-13T08:35:04Z",
+      "hmiHwProductId": "HW-1",
+      "bindingCode": "BIND-1",
+      "status": null,
+      "bindings": null,
+      "company": null
+    }
+  }
+]

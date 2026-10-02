@@ -1,0 +1,58 @@
+[
+  {
+    "type": "group",
+    "label": {
+      "en": "Updates",
+      "nl": "Updates"
+    },
+    "children": [
+      {
+        "id": "poll_interval",
+        "type": "number",
+        "label": {
+          "en": "Check every",
+          "nl": "Controleer elke"
+        },
+        "hint": {
+          "en": "How often the app asks the Mahlkönig Sync cloud for new shots. At least 1 minute.",
+          "nl": "Hoe vaak de app de Mahlkönig Sync-cloud om nieuwe shots vraagt. Minimaal 1 minuut."
+        },
+        "value": 2,
+        "min": 1,
+        "max": 60,
+        "step": 1,
+        "units": {
+          "en": "minutes",
+          "nl": "minuten"
+        }
+      }
+    ]
+  },
+  {
+    "type": "group",
+    "label": {
+      "en": "Scale",
+      "nl": "Weegschaal"
+    },
+    "children": [
+      {
+        "id": "serial",
+        "type": "label",
+        "label": {
+          "en": "Serial number",
+          "nl": "Serienummer"
+        },
+        "value": "-"
+      },
+      {
+        "id": "grinder",
+        "type": "label",
+        "label": {
+          "en": "Paired grinder",
+          "nl": "Gekoppelde molen"
+        },
+        "value": "-"
+      }
+    ]
+  }
+]

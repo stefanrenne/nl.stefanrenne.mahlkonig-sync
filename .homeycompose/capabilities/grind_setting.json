@@ -1,0 +1,12 @@
+{
+  "type": "number",
+  "title": {
+    "en": "Grind setting",
+    "nl": "Maalstand"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "decimals": 0,
+  "insights": true
+}

@@ -1,0 +1,93 @@
+{
+  "name": {
+    "en": "E64 WS",
+    "nl": "E64 WS"
+  },
+  "class": "coffeemachine",
+  "capabilities": [
+    "dose_weight",
+    "grind_setting",
+    "grind_time",
+    "last_grind",
+    "dose_target",
+    "grind_setting_target",
+    "brew_time_target",
+    "recipe_mode",
+    "standby",
+    "measure_temperature",
+    "disc_usage",
+    "disc_health"
+  ],
+  "capabilitiesOptions": {
+    "measure_temperature": {
+      "title": {
+        "en": "Motor temperature",
+        "nl": "Motortemperatuur"
+      }
+    }
+  },
+  "platforms": [
+    "local"
+  ],
+  "connectivity": [
+    "cloud"
+  ],
+  "images": {
+    "small": "{{driverAssetsPath}}/images/small.png",
+    "large": "{{driverAssetsPath}}/images/large.png",
+    "xlarge": "{{driverAssetsPath}}/images/xlarge.png"
+  },
+  "pair": [
+    {
+      "id": "login_credentials",
+      "template": "login_credentials",
+      "options": {
+        "logo": "../../../assets/icon.svg",
+        "usernameLabel": {
+          "en": "E-mail",
+          "nl": "E-mail"
+        },
+        "usernamePlaceholder": {
+          "en": "Your Mahlkönig Sync e-mail",
+          "nl": "Je Mahlkönig Sync-e-mailadres"
+        },
+        "passwordLabel": {
+          "en": "Password",
+          "nl": "Wachtwoord"
+        }
+      }
+    },
+    {
+      "id": "list_devices",
+      "template": "list_devices",
+      "navigation": {
+        "next": "add_devices"
+      }
+    },
+    {
+      "id": "add_devices",
+      "template": "add_devices"
+    }
+  ],
+  "repair": [
+    {
+      "id": "login_credentials",
+      "template": "login_credentials",
+      "options": {
+        "logo": "../../../assets/icon.svg",
+        "usernameLabel": {
+          "en": "E-mail",
+          "nl": "E-mail"
+        },
+        "usernamePlaceholder": {
+          "en": "Your Mahlkönig Sync e-mail",
+          "nl": "Je Mahlkönig Sync-e-mailadres"
+        },
+        "passwordLabel": {
+          "en": "Password",
+          "nl": "Wachtwoord"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "id": "nl.stefanrenne.mahlkoenig-sync",
+  "version": "1.0.0",
+  "compatibility": ">=12.1.2",
+  "sdk": 3,
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "en": "Mahlkönig Sync",
+    "nl": "Mahlkönig Sync"
+  },
+  "description": {
+    "en": "Your grinder's every grind and shot, ready for your flows.",
+    "nl": "Elke maalbeurt en shot van je molen, klaar voor je flows."
+  },
+  "category": [
+    "appliances"
+  ],
+  "author": {
+    "name": "Stefan Renne",
+    "email": "srenne1@gmail.com"
+  },
+  "permissions": [],
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "bugs": {
+    "url": "https://github.com/stefanrenne/nl.stefanrenne.mahlkoenig-sync/issues"
+  },
+  "source": "https://github.com/stefanrenne/nl.stefanrenne.mahlkoenig-sync",
+  "support": "https://github.com/stefanrenne/nl.stefanrenne.mahlkoenig-sync/issues",
+  "contributors": {
+    "developers": [
+      {
+        "name": "Stefan Renne",
+        "email": "srenne1@gmail.com"
+      }
+    ],
+    "translators": [
+      {
+        "name": "🇬🇧 Stefan Renne"
+      },
+      {
+        "name": "🇳🇱 Stefan Renne"
+      }
+    ]
+  },
+  "contributing": {
+    "donate": {
+      "paypal": {
+        "username": "srenne1"
+      },
+      "githubSponsors": {
+        "username": "stefanrenne"
+      }
+    }
+  },
+  "brandColor": "#3d2b1f",
+  "tags": {
+    "en": [
+      "coffee",
+      "espresso",
+      "grinder",
+      "mahlkönig",
+      "e64 ws"
+    ],
+    "nl": [
+      "koffie",
+      "espresso",
+      "molen",
+      "mahlkönig",
+      "e64 ws"
+    ]
+  }
+}

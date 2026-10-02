@@ -1,0 +1,815 @@
+{
+  "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
+  "id": "nl.stefanrenne.mahlkoenig-sync",
+  "version": "1.0.0",
+  "compatibility": ">=12.1.2",
+  "sdk": 3,
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "en": "Mahlkönig Sync",
+    "nl": "Mahlkönig Sync"
+  },
+  "description": {
+    "en": "Your grinder's every grind and shot, ready for your flows.",
+    "nl": "Elke maalbeurt en shot van je molen, klaar voor je flows."
+  },
+  "category": [
+    "appliances"
+  ],
+  "author": {
+    "name": "Stefan Renne",
+    "email": "srenne1@gmail.com"
+  },
+  "permissions": [],
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "bugs": {
+    "url": "https://github.com/stefanrenne/nl.stefanrenne.mahlkoenig-sync/issues"
+  },
+  "source": "https://github.com/stefanrenne/nl.stefanrenne.mahlkoenig-sync",
+  "support": "https://github.com/stefanrenne/nl.stefanrenne.mahlkoenig-sync/issues",
+  "contributors": {
+    "developers": [
+      {
+        "name": "Stefan Renne",
+        "email": "srenne1@gmail.com"
+      }
+    ],
+    "translators": [
+      {
+        "name": "🇬🇧 Stefan Renne"
+      },
+      {
+        "name": "🇳🇱 Stefan Renne"
+      }
+    ]
+  },
+  "contributing": {
+    "donate": {
+      "paypal": {
+        "username": "srenne1"
+      },
+      "githubSponsors": {
+        "username": "stefanrenne"
+      }
+    }
+  },
+  "brandColor": "#3d2b1f",
+  "tags": {
+    "en": [
+      "coffee",
+      "espresso",
+      "grinder",
+      "mahlkönig",
+      "e64 ws"
+    ],
+    "nl": [
+      "koffie",
+      "espresso",
+      "molen",
+      "mahlkönig",
+      "e64 ws"
+    ]
+  },
+  "flow": {
+    "triggers": [
+      {
+        "id": "grind_completed",
+        "title": {
+          "en": "Grind completed",
+          "nl": "Maalbeurt voltooid"
+        },
+        "hint": {
+          "en": "Fires once for every grind, purges included. Use the \"Is purge\" token to leave purges out.",
+          "nl": "Gaat één keer af voor elke maalbeurt, ook voor purges. Gebruik de token \"Is purge\" om purges over te slaan."
+        },
+        "tokens": [
+          {
+            "name": "dose",
+            "type": "number",
+            "title": {
+              "en": "Dose (g)",
+              "nl": "Dosis (g)"
+            },
+            "example": 18.1
+          },
+          {
+            "name": "grind_setting",
+            "type": "number",
+            "title": {
+              "en": "Grind setting",
+              "nl": "Maalstand"
+            },
+            "example": 140
+          },
+          {
+            "name": "grind_time",
+            "type": "number",
+            "title": {
+              "en": "Grind time (s)",
+              "nl": "Maaltijd (s)"
+            },
+            "example": 7.9
+          },
+          {
+            "name": "started_via",
+            "type": "string",
+            "title": {
+              "en": "Started via",
+              "nl": "Gestart via"
+            },
+            "example": "PortafilterDetection"
+          },
+          {
+            "name": "is_purge",
+            "type": "boolean",
+            "title": {
+              "en": "Is purge",
+              "nl": "Is purge"
+            },
+            "example": false
+          }
+        ],
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=e64ws"
+          }
+        ]
+      },
+      {
+        "id": "shot_completed",
+        "title": {
+          "en": "Shot completed",
+          "nl": "Shot voltooid"
+        },
+        "hint": {
+          "en": "Fires when the paired Sync Scale reports a shot. Dose and ratio come from the last grind (not a purge) up to 15 minutes before the shot, and are 0 when there was none.",
+          "nl": "Gaat af wanneer de gekoppelde Sync Scale een shot meldt. Dosis en verhouding komen van de laatste maalbeurt (geen purge) tot 15 minuten voor de shot, en zijn 0 als die er niet was."
+        },
+        "tokens": [
+          {
+            "name": "yield",
+            "type": "number",
+            "title": {
+              "en": "Yield (g)",
+              "nl": "Yield (g)"
+            },
+            "example": 36.4
+          },
+          {
+            "name": "shot_time",
+            "type": "number",
+            "title": {
+              "en": "Shot time (s)",
+              "nl": "Shottijd (s)"
+            },
+            "example": 27.5
+          },
+          {
+            "name": "dose",
+            "type": "number",
+            "title": {
+              "en": "Dose (g)",
+              "nl": "Dosis (g)"
+            },
+            "example": 18.1
+          },
+          {
+            "name": "ratio",
+            "type": "number",
+            "title": {
+              "en": "Ratio",
+              "nl": "Verhouding"
+            },
+            "example": 2.01
+          }
+        ],
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=e64ws"
+          }
+        ]
+      },
+      {
+        "id": "scale_shot_completed",
+        "title": {
+          "en": "Shot completed",
+          "nl": "Shot voltooid"
+        },
+        "hint": {
+          "en": "Fires once for every shot the Sync Scale reports.",
+          "nl": "Gaat één keer af voor elke shot die de Sync Scale meldt."
+        },
+        "tokens": [
+          {
+            "name": "yield",
+            "type": "number",
+            "title": {
+              "en": "Yield (g)",
+              "nl": "Yield (g)"
+            },
+            "example": 36.4
+          },
+          {
+            "name": "shot_time",
+            "type": "number",
+            "title": {
+              "en": "Shot time (s)",
+              "nl": "Shottijd (s)"
+            },
+            "example": 27.5
+          }
+        ],
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=sync-scale"
+          }
+        ]
+      }
+    ],
+    "conditions": [
+      {
+        "id": "last_grind_within",
+        "title": {
+          "en": "Last grind was less than … minutes ago",
+          "nl": "Laatste maalbeurt was minder dan … minuten geleden"
+        },
+        "titleFormatted": {
+          "en": "Last grind was !{{less|more}} than [[minutes]] minutes ago",
+          "nl": "Laatste maalbeurt was !{{minder|meer}} dan [[minutes]] minuten geleden"
+        },
+        "hint": {
+          "en": "Purges don't count.",
+          "nl": "Purges tellen niet mee."
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=e64ws"
+          },
+          {
+            "name": "minutes",
+            "type": "number",
+            "title": {
+              "en": "Minutes",
+              "nl": "Minuten"
+            },
+            "min": 1,
+            "max": 1440,
+            "step": 1,
+            "placeholder": {
+              "en": "minutes",
+              "nl": "minuten"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "drivers": [
+    {
+      "name": {
+        "en": "E64 WS",
+        "nl": "E64 WS"
+      },
+      "class": "coffeemachine",
+      "capabilities": [
+        "dose_weight",
+        "grind_setting",
+        "grind_time",
+        "last_grind",
+        "dose_target",
+        "grind_setting_target",
+        "brew_time_target",
+        "recipe_mode",
+        "standby",
+        "measure_temperature",
+        "disc_usage",
+        "disc_health"
+      ],
+      "capabilitiesOptions": {
+        "measure_temperature": {
+          "title": {
+            "en": "Motor temperature",
+            "nl": "Motortemperatuur"
+          }
+        }
+      },
+      "platforms": [
+        "local"
+      ],
+      "connectivity": [
+        "cloud"
+      ],
+      "images": {
+        "small": "/drivers/e64ws/assets/images/small.png",
+        "large": "/drivers/e64ws/assets/images/large.png",
+        "xlarge": "/drivers/e64ws/assets/images/xlarge.png"
+      },
+      "pair": [
+        {
+          "id": "login_credentials",
+          "template": "login_credentials",
+          "options": {
+            "logo": "../../../assets/icon.svg",
+            "usernameLabel": {
+              "en": "E-mail",
+              "nl": "E-mail"
+            },
+            "usernamePlaceholder": {
+              "en": "Your Mahlkönig Sync e-mail",
+              "nl": "Je Mahlkönig Sync-e-mailadres"
+            },
+            "passwordLabel": {
+              "en": "Password",
+              "nl": "Wachtwoord"
+            }
+          }
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "repair": [
+        {
+          "id": "login_credentials",
+          "template": "login_credentials",
+          "options": {
+            "logo": "../../../assets/icon.svg",
+            "usernameLabel": {
+              "en": "E-mail",
+              "nl": "E-mail"
+            },
+            "usernamePlaceholder": {
+              "en": "Your Mahlkönig Sync e-mail",
+              "nl": "Je Mahlkönig Sync-e-mailadres"
+            },
+            "passwordLabel": {
+              "en": "Password",
+              "nl": "Wachtwoord"
+            }
+          }
+        }
+      ],
+      "id": "e64ws",
+      "settings": [
+        {
+          "type": "group",
+          "label": {
+            "en": "Updates",
+            "nl": "Updates"
+          },
+          "children": [
+            {
+              "id": "poll_interval",
+              "type": "number",
+              "label": {
+                "en": "Check every",
+                "nl": "Controleer elke"
+              },
+              "hint": {
+                "en": "How often the app asks the Mahlkönig Sync cloud for new grinds and shots. At least 1 minute.",
+                "nl": "Hoe vaak de app de Mahlkönig Sync-cloud om nieuwe maalbeurten en shots vraagt. Minimaal 1 minuut."
+              },
+              "value": 2,
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "units": {
+                "en": "minutes",
+                "nl": "minuten"
+              }
+            },
+            {
+              "id": "purge_threshold",
+              "type": "number",
+              "label": {
+                "en": "Purge below",
+                "nl": "Purge onder"
+              },
+              "hint": {
+                "en": "A grind with a dose below this weight counts as a purge. Purges still trigger \"Grind completed\" (with \"Is purge\" set), but don't change the dose, grind setting, grind time or last grind shown on the device.",
+                "nl": "Een maalbeurt met een dosis onder dit gewicht telt als purge. Een purge laat \"Maalbeurt voltooid\" nog steeds afgaan (met \"Is purge\" aan), maar verandert de dosis, maalstand, maaltijd en laatste maalbeurt op het apparaat niet."
+              },
+              "value": 5,
+              "min": 0,
+              "max": 50,
+              "step": 0.5,
+              "units": {
+                "en": "g",
+                "nl": "g"
+              }
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Grinder",
+            "nl": "Molen"
+          },
+          "children": [
+            {
+              "id": "model",
+              "type": "label",
+              "label": {
+                "en": "Model",
+                "nl": "Model"
+              },
+              "value": "-"
+            },
+            {
+              "id": "serial",
+              "type": "label",
+              "label": {
+                "en": "Serial number",
+                "nl": "Serienummer"
+              },
+              "value": "-"
+            },
+            {
+              "id": "firmware",
+              "type": "label",
+              "label": {
+                "en": "Firmware",
+                "nl": "Firmware"
+              },
+              "value": "-"
+            },
+            {
+              "id": "scale",
+              "type": "label",
+              "label": {
+                "en": "Sync Scale",
+                "nl": "Sync Scale"
+              },
+              "value": "-"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Sync Scale",
+        "nl": "Sync Scale"
+      },
+      "class": "sensor",
+      "capabilities": [
+        "yield_weight",
+        "shot_time",
+        "last_shot"
+      ],
+      "platforms": [
+        "local"
+      ],
+      "connectivity": [
+        "cloud"
+      ],
+      "images": {
+        "small": "/drivers/sync-scale/assets/images/small.png",
+        "large": "/drivers/sync-scale/assets/images/large.png",
+        "xlarge": "/drivers/sync-scale/assets/images/xlarge.png"
+      },
+      "pair": [
+        {
+          "id": "login_credentials",
+          "template": "login_credentials",
+          "options": {
+            "logo": "../../../assets/icon.svg",
+            "usernameLabel": {
+              "en": "E-mail",
+              "nl": "E-mail"
+            },
+            "usernamePlaceholder": {
+              "en": "Your Mahlkönig Sync e-mail",
+              "nl": "Je Mahlkönig Sync-e-mailadres"
+            },
+            "passwordLabel": {
+              "en": "Password",
+              "nl": "Wachtwoord"
+            }
+          }
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "repair": [
+        {
+          "id": "login_credentials",
+          "template": "login_credentials",
+          "options": {
+            "logo": "../../../assets/icon.svg",
+            "usernameLabel": {
+              "en": "E-mail",
+              "nl": "E-mail"
+            },
+            "usernamePlaceholder": {
+              "en": "Your Mahlkönig Sync e-mail",
+              "nl": "Je Mahlkönig Sync-e-mailadres"
+            },
+            "passwordLabel": {
+              "en": "Password",
+              "nl": "Wachtwoord"
+            }
+          }
+        }
+      ],
+      "id": "sync-scale",
+      "settings": [
+        {
+          "type": "group",
+          "label": {
+            "en": "Updates",
+            "nl": "Updates"
+          },
+          "children": [
+            {
+              "id": "poll_interval",
+              "type": "number",
+              "label": {
+                "en": "Check every",
+                "nl": "Controleer elke"
+              },
+              "hint": {
+                "en": "How often the app asks the Mahlkönig Sync cloud for new shots. At least 1 minute.",
+                "nl": "Hoe vaak de app de Mahlkönig Sync-cloud om nieuwe shots vraagt. Minimaal 1 minuut."
+              },
+              "value": 2,
+              "min": 1,
+              "max": 60,
+              "step": 1,
+              "units": {
+                "en": "minutes",
+                "nl": "minuten"
+              }
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Scale",
+            "nl": "Weegschaal"
+          },
+          "children": [
+            {
+              "id": "serial",
+              "type": "label",
+              "label": {
+                "en": "Serial number",
+                "nl": "Serienummer"
+              },
+              "value": "-"
+            },
+            {
+              "id": "grinder",
+              "type": "label",
+              "label": {
+                "en": "Paired grinder",
+                "nl": "Gekoppelde molen"
+              },
+              "value": "-"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "capabilities": {
+    "brew_ratio": {
+      "type": "number",
+      "title": {
+        "en": "Brew ratio",
+        "nl": "Verhouding"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 2,
+      "insights": true
+    },
+    "brew_time_target": {
+      "type": "number",
+      "title": {
+        "en": "Target shot time",
+        "nl": "Doelshottijd"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "units": {
+        "en": "s",
+        "nl": "s"
+      },
+      "decimals": 1,
+      "insights": true
+    },
+    "disc_health": {
+      "type": "number",
+      "title": {
+        "en": "Disc health",
+        "nl": "Conditie maalschijven"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 0,
+      "insights": true
+    },
+    "disc_usage": {
+      "type": "number",
+      "title": {
+        "en": "Disc usage",
+        "nl": "Gebruik maalschijven"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 0,
+      "insights": true
+    },
+    "dose_target": {
+      "type": "number",
+      "title": {
+        "en": "Target dose",
+        "nl": "Doeldosis"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "units": {
+        "en": "g",
+        "nl": "g"
+      },
+      "decimals": 1,
+      "insights": true
+    },
+    "dose_weight": {
+      "type": "number",
+      "title": {
+        "en": "Dose",
+        "nl": "Dosis"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "units": {
+        "en": "g",
+        "nl": "g"
+      },
+      "decimals": 1,
+      "insights": true
+    },
+    "grind_setting": {
+      "type": "number",
+      "title": {
+        "en": "Grind setting",
+        "nl": "Maalstand"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 0,
+      "insights": true
+    },
+    "grind_setting_target": {
+      "type": "number",
+      "title": {
+        "en": "Target grind setting",
+        "nl": "Doelmaalstand"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "decimals": 0,
+      "insights": true
+    },
+    "grind_time": {
+      "type": "number",
+      "title": {
+        "en": "Grind time",
+        "nl": "Maaltijd"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "units": {
+        "en": "s",
+        "nl": "s"
+      },
+      "decimals": 1,
+      "insights": true
+    },
+    "last_grind": {
+      "type": "string",
+      "title": {
+        "en": "Last grind",
+        "nl": "Laatste maalbeurt"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
+    "last_shot": {
+      "type": "string",
+      "title": {
+        "en": "Last shot",
+        "nl": "Laatste shot"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
+    "recipe_mode": {
+      "type": "string",
+      "title": {
+        "en": "Recipe mode",
+        "nl": "Receptmodus"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
+    },
+    "shot_time": {
+      "type": "number",
+      "title": {
+        "en": "Shot time",
+        "nl": "Shottijd"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "units": {
+        "en": "s",
+        "nl": "s"
+      },
+      "decimals": 1,
+      "insights": true
+    },
+    "standby": {
+      "type": "boolean",
+      "title": {
+        "en": "Standby",
+        "nl": "Stand-by"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "insights": true,
+      "insightsTitleTrue": {
+        "en": "Went into standby",
+        "nl": "Ging in stand-by"
+      },
+      "insightsTitleFalse": {
+        "en": "Woke up",
+        "nl": "Werd wakker"
+      }
+    },
+    "yield_weight": {
+      "type": "number",
+      "title": {
+        "en": "Yield",
+        "nl": "Yield"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "units": {
+        "en": "g",
+        "nl": "g"
+      },
+      "decimals": 1,
+      "insights": true
+    }
+  }
+}

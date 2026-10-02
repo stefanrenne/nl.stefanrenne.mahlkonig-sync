@@ -1,0 +1,10 @@
+{
+  "type": "string",
+  "title": {
+    "en": "Last grind",
+    "nl": "Laatste maalbeurt"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor"
+}
