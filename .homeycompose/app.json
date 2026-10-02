@@ -1,5 +1,5 @@
 {
-  "id": "nl.stefanrenne.mahlkoenig-sync",
+  "id": "nl.stefanrenne.mahlkonig-sync",
   "version": "1.0.0",
   "compatibility": ">=12.1.2",
   "sdk": 3,
@@ -28,10 +28,10 @@
     "xlarge": "/assets/images/xlarge.png"
   },
   "bugs": {
-    "url": "https://github.com/stefanrenne/nl.stefanrenne.mahlkoenig-sync/issues"
+    "url": "https://github.com/stefanrenne/nl.stefanrenne.mahlkonig-sync/issues"
   },
-  "source": "https://github.com/stefanrenne/nl.stefanrenne.mahlkoenig-sync",
-  "support": "https://github.com/stefanrenne/nl.stefanrenne.mahlkoenig-sync/issues",
+  "source": "https://github.com/stefanrenne/nl.stefanrenne.mahlkonig-sync",
+  "support": "https://github.com/stefanrenne/nl.stefanrenne.mahlkonig-sync/issues",
   "contributors": {
     "developers": [
       {

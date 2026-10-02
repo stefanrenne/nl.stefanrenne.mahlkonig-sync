@@ -36,5 +36,8 @@ These were the maintainer's calls. Don't file them as bugs or reopen them withou
 - **A separate Sync Scale driver with yield and shot time only**: no dose or ratio on the scale.
   The grinder keeps its shot capabilities and "Shot completed" card too, so with both devices a
   shot fires twice. That duplication is intended.
+- **App id `nl.stefanrenne.mahlkonig-sync`**, the same as the GitHub repo and the local folder
+  ("mahlkonig", no "oe"). The original brief said `nl.stefanrenne.mahlkoenig-sync`; it was changed
+  before the first release. Don't change it again: an app id can't change after publishing.
 - **`.mts` instead of `.ts`.** The brief named `lib/SyncClient.ts`; the file is
   `lib/SyncClient.mts` to match the maintainer's other apps (TypeScript as ES modules).

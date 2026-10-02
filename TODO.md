@@ -12,10 +12,6 @@ Status: `[ ]` open, `[~]` in progress, `[?]` needs a decision or verification.
   same shape as `last-events.lastBrew` (`payload.mass` in mg, `payload.duration` in ms). Verify
   with a real shot (probe or capture) and turn a response into a fixture.
   (`lib/events.mts` `parseBrew`, `drivers/e64ws/device.mts` and `drivers/sync-scale/device.mts` `poll`)
-- [ ] **Rename the GitHub repo** to `nl.stefanrenne.mahlkoenig-sync`. `.homeycompose/app.json`
-  (`source`, `bugs`, `support`) already points there; the remote is still
-  `stefanrenne/nl.stefanrenne.mahlkonig`. After renaming:
-  `git remote set-url origin git@github.com:stefanrenne/nl.stefanrenne.mahlkoenig-sync.git`.
 - [?] **Terms of use** (`docs/sync-api.md`, Q14): check `https://www.mahlkoenig.com/pages/sync-terms-of-use`
   for anything against third-party access before publishing to the App Store.
 - [ ] Add `homeyCommunityTopicId` to `.homeycompose/app.json` once there's a forum topic.

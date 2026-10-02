@@ -5,6 +5,11 @@ sounds familiar.
 
 ## Before 1.0.0 (unreleased, 2026-10-01 – 2026-10-02)
 
+- **Repo, folder and app id all renamed to `nl.stefanrenne.mahlkonig-sync`** (GitHub repo was
+  `nl.stefanrenne.mahlkonig`; the app id and local folder were `nl.stefanrenne.mahlkoenig-sync`).
+  The app had never been published, so the id change had no effect on users. Gotcha: a test
+  install under the old id (`nl.stefanrenne.mahlkoenig-sync`) may still be on the maintainer's
+  Homey; remove it there.
 - **The HA integration's endpoint doesn't work for home accounts.** The shot-history query
   (`dashboard-service/shot-history/query`) needs a `storeId`; a home ("FAM") account has none, and
   every alternative body (`companyId`, `grinderId`, both, as numbers or strings) is refused with

@@ -22,7 +22,8 @@ community Home Assistant integration
 ## Technical
 
 - Homey SDK v3, TypeScript, Homey Compose (`.homeycompose/`).
-- App id: `nl.stefanrenne.mahlkoenig-sync`.
+- App id: `nl.stefanrenne.mahlkonig-sync`. (*Changed 2026-10-02* from `nl.stefanrenne.mahlkoenig-sync`
+  in the original brief, to match the GitHub repo name.)
 - Node built-ins (`fetch`) instead of heavy dependencies.
 - The API client is a separate, testable module (`lib/SyncClient.ts`) with no Homey code in it.
 - Code and comments in English.
