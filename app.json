@@ -85,8 +85,8 @@
           "nl": "Maalbeurt voltooid"
         },
         "hint": {
-          "en": "Fires once for every grind, purges included. Use the \"Is purge\" token to leave purges out.",
-          "nl": "Gaat één keer af voor elke maalbeurt, ook voor purges. Gebruik de token \"Is purge\" om purges over te slaan."
+          "en": "Fires once for every grind, purges included. Use the \"Is purge\" token to leave purges out, and \"Portafilter detected\" to tell grinds started by inserting the portafilter from grinds started with the button.",
+          "nl": "Gaat één keer af voor elke maalbeurt, ook voor purges. Gebruik de token \"Is purge\" om purges over te slaan, en \"Portafilter gedetecteerd\" om maalbeurten die starten door de portafilter erin te schuiven te onderscheiden van maalbeurten die met de knop starten."
         },
         "tokens": [
           {
@@ -117,13 +117,13 @@
             "example": 7.9
           },
           {
-            "name": "started_via",
-            "type": "string",
+            "name": "portafilter_detected",
+            "type": "boolean",
             "title": {
-              "en": "Started via",
-              "nl": "Gestart via"
+              "en": "Portafilter detected",
+              "nl": "Portafilter gedetecteerd"
             },
-            "example": "PortafilterDetection"
+            "example": true
           },
           {
             "name": "is_purge",

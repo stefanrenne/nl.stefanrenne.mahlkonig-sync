@@ -10,6 +10,7 @@ import {
   isPurge,
   parseBrew,
   parseGrind,
+  startedByPortafilter,
   type Brew,
   type Grind,
   type TrackerState,
@@ -77,7 +78,7 @@ export default class E64WSDevice extends SyncDevice {
         dose: grind.doseG ?? 0,
         grind_setting: grind.grindSetting ?? 0,
         grind_time: grind.grindTimeS ?? 0,
-        started_via: grind.triggerMode ?? '',
+        portafilter_detected: startedByPortafilter(grind),
         is_purge: isPurge(grind, threshold),
       });
     }

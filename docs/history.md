@@ -26,8 +26,12 @@ These were the maintainer's calls. Don't file them as bugs or reopen them withou
 - **No Store ID in pairing.** Pairing asks for e-mail and password only. (The original brief asked
   for e-mail, password and Store ID; home accounts have no store and the mobile API doesn't need
   one.)
-- **"Grind completed" fires for purges too**, with the tokens `started_via` and `is_purge`, so the
-  user filters in the flow. (The maintainer first chose "never for purges", then changed it.)
+- **"Grind completed" fires for purges too**, with the tokens `portafilter_detected` and
+  `is_purge`, so the user filters in the flow. (The maintainer first chose "never for purges", then
+  changed it.)
+- **`portafilter_detected` (boolean) instead of a `started_via` text token**: the raw
+  `triggerMode` values aren't documented and only two are known, so the token answers the one
+  question users have: was the portafilter inserted?
 - **A purge is a grind below a weight threshold** (device setting, default 5 g), not "started with
   the start button".
 - **Purges don't change the capabilities or the condition**: they always show the last real grind.

@@ -8,6 +8,7 @@ import {
   ingestGrinds,
   isPurge,
   parseBrew,
+  startedByPortafilter,
   parseGrind,
   type Brew,
   type Grind,
@@ -105,6 +106,15 @@ describe('isPurge', () => {
     expect(isPurge(purge, 1)).toBe(false)
     expect(isPurge(shot, 25)).toBe(true)
     expect(isPurge({ ...shot, doseG: null }, 25)).toBe(false)
+  })
+})
+
+describe('startedByPortafilter', () => {
+  it('is true only for portafilter detection', () => {
+    expect(startedByPortafilter(shot)).toBe(true)
+    expect(startedByPortafilter(purge)).toBe(false)
+    expect(startedByPortafilter({ ...shot, triggerMode: null })).toBe(false)
+    expect(startedByPortafilter({ ...shot, triggerMode: 'SomethingNew' })).toBe(false)
   })
 })
 

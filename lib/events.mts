@@ -96,6 +96,11 @@ export function parseBrew(raw: RawBrewEvent | null | undefined): Brew | null {
   };
 }
 
+/** True when the grinder started because the portafilter was inserted (not the start button or unknown). */
+export function startedByPortafilter(grind: Grind): boolean {
+  return grind.triggerMode === 'PortafilterDetection';
+}
+
 /** A purge is a grind below the dose threshold. A grind with an unknown dose is not a purge. */
 export function isPurge(grind: Grind, purgeThresholdG: number): boolean {
   return grind.doseG !== null && grind.doseG < purgeThresholdG;

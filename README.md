@@ -63,7 +63,8 @@ scale has no dose or ratio: those come from the grinder, whose own *Shot complet
 **When…** (E64 WS)
 
 - **Grind completed**, with the tokens *Dose (g)*, *Grind setting*, *Grind time (s)*,
-  *Started via* (for example `PortafilterDetection` or `StartButton`) and *Is purge* (yes/no).
+  *Portafilter detected* (yes when the grind started because you inserted the portafilter, no
+  when it was started with the button) and *Is purge* (yes/no).
   Fires once for every grind, purges included: add a check on *Is purge* to leave them out.
 - **Shot completed** (Sync Scale), with the tokens *Yield (g)*, *Shot time (s)*, *Dose (g)* and
   *Ratio*. Dose and ratio come from the last real grind up to 15 minutes before the shot; they are

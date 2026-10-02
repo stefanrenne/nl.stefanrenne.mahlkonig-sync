@@ -85,9 +85,9 @@ or `POST /admin-service/device/query` with `loadStatus` and `loadBindings`; see
 
 ## Flows
 
-- **Trigger "Grind completed"** with tokens dose, grind setting, grind time, **started via**
-  (`payload.triggerMode`, for example `PortafilterDetection` or `StartButton`) and **is purge**
-  (boolean). Fires once per new grind event (new `eventUuid`), not on every poll, and **also for
+- **Trigger "Grind completed"** with tokens dose, grind setting, grind time, **portafilter
+  detected** (boolean, *changed 2026-10-02* from a "started via" text token: true when
+  `payload.triggerMode` is `PortafilterDetection`) and **is purge** (boolean). Fires once per new grind event (new `eventUuid`), not on every poll, and **also for
   purges**, so the user can filter on the tokens in the flow.
   - *Decision 2026-10-02* (the maintainer first chose "never fire for a purge", then changed it to
     this).

@@ -172,15 +172,15 @@ describe('Grind completed', () => {
     await device.poll()
   }
 
-  it('fires once per new grind, purges included, with the purge flag and how it was started', async () => {
+  it('fires once per new grind, purges included, with the purge and portafilter flags', async () => {
     const device = createDevice()
     await device.onInit()
 
     await pollTwice(device, [grindEvent('shot', 1, 19_976), grindEvent('purge', 2, 1_637, 'StartButton')])
 
     expect(card('grind_completed').tokens()).toEqual([
-      { dose: 1.6, grind_setting: 139, grind_time: 7.9, started_via: 'StartButton', is_purge: true },
-      { dose: 20, grind_setting: 139, grind_time: 7.9, started_via: 'PortafilterDetection', is_purge: false },
+      { dose: 1.6, grind_setting: 139, grind_time: 7.9, portafilter_detected: false, is_purge: true },
+      { dose: 20, grind_setting: 139, grind_time: 7.9, portafilter_detected: true, is_purge: false },
     ])
   })
 
