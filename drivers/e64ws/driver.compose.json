@@ -14,9 +14,7 @@
     "brew_time_target",
     "recipe_mode",
     "standby",
-    "measure_temperature",
-    "disc_usage",
-    "disc_health"
+    "measure_temperature"
   ],
   "capabilitiesOptions": {
     "measure_temperature": {

@@ -128,7 +128,7 @@ describe('Sync Scale device', () => {
     expect(card('scale_shot_completed').trigger).toHaveBeenCalledTimes(1)
   })
 
-  it('looks back from just before the newest shot it saw', async () => {
+  it('reads the whole last 24 hours on every poll', async () => {
     client.findBrewEvents.mockResolvedValueOnce([brewEvent('shot', 10)])
     const device = createDevice()
     await device.onInit()
@@ -137,7 +137,7 @@ describe('Sync Scale device', () => {
     await device.poll()
 
     const from = client.findBrewEvents.mock.calls.at(-1)?.[1] as Date
-    expect(from.toISOString()).toBe('2026-10-02T07:15:00.000Z')
+    expect(from.toISOString()).toBe('2026-10-01T07:30:00.000Z')
   })
 
   it('goes unavailable on errors and explains rejected credentials', async () => {

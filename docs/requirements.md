@@ -78,8 +78,7 @@ or `POST /admin-service/device/query` with `loadStatus` and `loadBindings`; see
 |---|---|---|
 | Standby on/off | `status.status.standbyActive` | Boolean |
 | Motor temperature | `status.status.motorTemperature` | Assumed °C (sample value 34); verify |
-| Disc usage | `status.status.discUsageTime` | Unit unknown; verify before choosing a capability |
-| Disc health | `status.status.discHealth` | Meaning and range unknown; verify |
+| ~~Disc usage, disc health~~ | `status.status.discUsageTime`, `discHealth` | *Removed 2026-10-02*: meaning unknown; hidden until verified |
 | Firmware versions | `status.status.hmiSwVersion`, `espSwVersion`, `bundleVersion` | Read-only device settings (labels), not capabilities |
 | Paired Sync Scale | `bindings[].brewer` with `type: "scale"` | Shown in device settings; decides whether yield/shot time capabilities are added |
 

@@ -10,6 +10,8 @@ import {
   parseBrew,
   startedByPortafilter,
   parseGrind,
+  realGrindBefore,
+  rememberBrews,
   type Brew,
   type Grind,
 } from '../lib/events.mjs'
@@ -229,5 +231,54 @@ describe('ingestBrews', () => {
   it('leaves the state alone when there are no shots', () => {
     const state = emptyTrackerState()
     expect(ingestBrews(state, [], false)).toEqual({ state, newBrews: [] })
+  })
+})
+
+describe('recent events for the widget', () => {
+  it('keeps the grinds of the baseline and of later polls, oldest first, without duplicates', () => {
+    const baseline = ingestGrinds(emptyTrackerState(), [shot, purge], 5).state
+    expect(baseline.recentGrinds.map((g) => g.uuid)).toEqual([purge.uuid, shot.uuid])
+
+    const later = grind('2026-10-02T08:00:00Z')
+    const next = ingestGrinds(baseline, [later, shot], 5).state
+    expect(next.recentGrinds.map((g) => g.uuid)).toEqual([purge.uuid, shot.uuid, later.uuid])
+  })
+
+  it('keeps the newest 100 grinds', () => {
+    let state = ingestGrinds(emptyTrackerState(), [], 5).state
+    for (let minute = 0; minute < 120; minute += 1) {
+      state = ingestGrinds(state, [grind(new Date(Date.parse('2026-10-02T00:00:00Z') + minute * 60_000).toISOString())], 5).state
+    }
+    expect(state.recentGrinds).toHaveLength(100)
+    expect(state.recentGrinds.at(-1)?.at).toBe('2026-10-02T01:59:00.000Z')
+  })
+
+  it('remembers shots, also on the baseline, and keeps the newest 50', () => {
+    const old = brew('2026-10-02T06:00:00Z')
+    const update = ingestBrews(emptyTrackerState(), [old], true)
+    expect(update.newBrews).toEqual([])
+
+    let state = rememberBrews(update.state, [old])
+    expect(state.recentBrews).toEqual([old])
+    expect(rememberBrews(state, [])).toBe(state)
+
+    for (let minute = 1; minute <= 60; minute += 1) {
+      state = rememberBrews(state, [brew(new Date(Date.parse('2026-10-02T06:00:00Z') + minute * 60_000).toISOString())])
+    }
+    expect(state.recentBrews).toHaveLength(50)
+    expect(state.recentBrews[0].at).toBe('2026-10-02T06:11:00.000Z')
+  })
+})
+
+describe('realGrindBefore', () => {
+  it('picks the newest real grind at or before the shot', () => {
+    const early = grind('2026-10-02T07:00:00Z', 18)
+    const late = grind('2026-10-02T07:05:00Z', 18.5)
+    const purgeAfter = grind('2026-10-02T07:06:00Z', 1)
+    const afterShot = grind('2026-10-02T07:20:00Z', 19)
+    const shotAt = brew('2026-10-02T07:10:00Z')
+
+    expect(realGrindBefore(shotAt, [early, null, afterShot, purgeAfter, late], 5)).toBe(late)
+    expect(realGrindBefore(shotAt, [purgeAfter, afterShot], 5)).toBeNull()
   })
 })

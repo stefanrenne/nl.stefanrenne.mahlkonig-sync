@@ -32,14 +32,13 @@ choose **Repair** to sign in again.
 | Value | Notes |
 |---|---|
 | Dose (g) | Of the last grind |
-| Grind setting | As reported by the grinder (unit not documented by Mahlkönig) |
+| Grind setting | The disc distance in µm |
 | Grind time (s) | Of the last grind |
 | Last grind | Date and time of the last grind |
 | Target dose, target grind setting, target shot time | From the recipe used for the last grind |
 | Recipe mode | For example `Gbw` (grind by weight) |
 | Standby | Whether the grinder is in standby |
 | Motor temperature | °C, as reported by the grinder |
-| Disc usage, disc health | As reported by the grinder (units not documented) |
 | Yield (g), shot time (s), brew ratio | Only appear when a Sync Scale is paired with the grinder |
 
 Purges (see below) don't change the dose, grind setting, grind time or last grind: those always
@@ -80,6 +79,19 @@ grinder's when you want dose and ratio, the scale's when you only care about the
 **And…** (E64 WS)
 
 - **Last grind was less than … minutes ago** (can be inverted to "more than"). Purges don't count.
+
+### Espresso widget
+
+Add the **Espresso** widget to a Homey dashboard and pick your grinder in its settings. It lists
+the last 24 hours, newest first, like the history in the Mahlkönig Sync app:
+
+- a grind with the shot that followed it (matched when the shot came within 15 minutes): grind
+  weight, disc distance, brew weight and brew time;
+- a grind without a shot (purges included): grind weight and disc distance;
+- a shot without a grind: brew weight and brew time.
+
+The widget updates by itself after each check and doesn't use any extra internet traffic. Shots
+need a Sync Scale paired with the grinder.
 
 ### Purges
 

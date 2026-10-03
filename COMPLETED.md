@@ -5,6 +5,21 @@ sounds familiar.
 
 ## Before 1.0.0 (unreleased, 2026-10-01 – 2026-10-02)
 
+- **The grinder device stopped starting after disc usage/health were hidden.** The migration called
+  `removeCapability('disc_health')`, but the capability's definition had been deleted too, and Homey
+  rejects removing an unknown capability ("Invalid Capability", 404). `onInit` failed, so the device
+  never polled and the widget showed stale data ("today: 0"). Fix: the definitions are back in
+  `.homeycompose/capabilities/` (not in the driver), and a failed removal is only logged. Gotcha:
+  never delete a capability definition while a migration still removes it. Tests:
+  `test/device.test.mts` "keeps starting and polling when removing an old capability fails",
+  `test/manifest.test.mts` "capabilities removed from existing devices are still defined".
+- **The widget missed most of the day's events.** Polls only read from 5 minutes before the
+  newest event seen, and the recent lists only took first-seen events, so on 2026-10-02 only 1 of
+  the 4 events of the day reached the widget (and that one, a 0.0 g grind, counted as a purge).
+  Fix: every poll reads the whole last 24 hours and merges everything into the recent lists.
+  Tests: `test/device.test.mts` "reads the whole last 24 hours on every poll…",
+  `test/summary.test.mts` "lists the maintainer's day like the official app…".
+
 - **Repo, folder and app id all renamed to `nl.stefanrenne.mahlkonig-sync`** (GitHub repo was
   `nl.stefanrenne.mahlkonig`; the app id and local folder were `nl.stefanrenne.mahlkoenig-sync`).
   The app had never been published, so the id change had no effect on users. Gotcha: a test

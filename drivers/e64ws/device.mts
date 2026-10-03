@@ -10,16 +10,23 @@ import {
   isPurge,
   parseBrew,
   parseGrind,
+  realGrindBefore,
+  rememberBrews,
   startedByPortafilter,
   type Brew,
   type Grind,
   type TrackerState,
 } from '../../lib/events.mjs';
 import { deviceName } from '../../lib/names.mjs';
+import { timelineFromState, type TimelineEntry } from '../../lib/summary.mjs';
+
+/** Realtime event the Espresso widget listens to, with `{ deviceId }`. */
+export const WIDGET_UPDATED_EVENT = 'espresso.updated';
 
 /** The status block (standby, temperature, firmware) changes slowly; fetch it less often. */
 const STATUS_INTERVAL_MS = 10 * MINUTE;
 const SCALE_CAPABILITIES = ['yield_weight', 'shot_time', 'brew_ratio'];
+const REMOVED_CAPABILITIES = ['disc_usage', 'disc_health'];
 
 const notNull = <T,>(value: T | null): value is T => value !== null;
 
@@ -30,8 +37,22 @@ export default class E64WSDevice extends SyncDevice {
   private shotCompleted!: FlowCardTriggerDevice;
 
   protected async onSyncInit() {
+    // Disc usage and disc health were shown before their meaning was known (docs/history.md).
+    // Homey can only remove a capability the app still defines, so their definitions stay in
+    // .homeycompose/capabilities/. A failure here must never stop the device from starting.
+    for (const capability of REMOVED_CAPABILITIES) {
+      if (this.hasCapability(capability)) {
+        await this.removeCapability(capability)
+          .catch((error) => this.error(`Removing ${capability} failed:`, error instanceof Error ? error.message : error));
+      }
+    }
     this.grindCompleted = this.homey.flow.getDeviceTriggerCard('grind_completed');
     this.shotCompleted = this.homey.flow.getDeviceTriggerCard('shot_completed');
+  }
+
+  /** What the Espresso widget shows: the last 24 hours, shots matched with their grinds. */
+  widgetTimeline(now: number): TimelineEntry[] {
+    return timelineFromState(this.trackerState(), now);
   }
 
   /** For the "Last grind was less than X minutes ago" condition. Purges don't count. */
@@ -46,12 +67,16 @@ export default class E64WSDevice extends SyncDevice {
     const previous = this.trackerState();
     const baseline = !previous.initialized;
 
+    let statusRefreshed = false;
     if (baseline || now - this.lastStatusAt >= STATUS_INTERVAL_MS) {
-      await this.refreshStatus(grinderId, now);
+      statusRefreshed = await this.refreshStatus(grinderId, now);
     }
 
+    // Every poll reads the whole last 24 hours: the widget lists them all, and the recent lists
+    // never miss an event that happened while an earlier poll looked at a shorter window.
+    const from = this.lookbackStart(now);
     const to = new Date(now + OVERLAP_MS);
-    const grinds = (await this.client.findGrindEvents(grinderId, this.windowStart(now, previous.lastGrindAt), to))
+    const grinds = (await this.client.findGrindEvents(grinderId, from, to))
       .map(parseGrind)
       .filter(notNull);
     const threshold = this.purgeThresholdG();
@@ -59,18 +84,24 @@ export default class E64WSDevice extends SyncDevice {
 
     let brews: Brew[] = [];
     if (this.scaleId !== null) {
-      brews = (await this.client.findBrewEvents(this.scaleId, this.windowStart(now, previous.lastBrew?.at ?? null), to))
+      brews = (await this.client.findBrewEvents(this.scaleId, from, to))
         .map(parseBrew)
         .filter(notNull);
     }
     const brewUpdate = ingestBrews(grindUpdate.state, brews, baseline);
-    const state = brewUpdate.state;
+    // Every shot fetched, not only new ones, like the grinds.
+    const state = rememberBrews(brewUpdate.state, brews);
+
+    const purges = grinds.filter((grind) => isPurge(grind, threshold)).length;
+    this.log(`Poll: ${grinds.length} grinds (${grindUpdate.newGrinds.length} new, ${purges} purges), ${brews.length} shots `
+      + `(${brewUpdate.newBrews.length} new); keeping ${state.recentGrinds.length} grinds and ${state.recentBrews.length} shots`
+      + `${baseline ? ' (baseline)' : ''}`);
 
     // Persist first, so a failure further down never makes the same event fire twice.
     await this.setStoreValue('tracker', state);
     await this.showGrind(state.lastRealGrind);
     if (state.lastBrew !== null) {
-      await this.showBrew(state.lastBrew, this.realGrindBefore(state.lastBrew, previous.lastRealGrind, grinds, threshold));
+      await this.showBrew(state.lastBrew, realGrindBefore(state.lastBrew, [previous.lastRealGrind, ...grinds], threshold));
     }
 
     for (const grind of grindUpdate.newGrinds.filter((event) => this.isRecent(now, event.at))) {
@@ -83,7 +114,7 @@ export default class E64WSDevice extends SyncDevice {
       });
     }
     for (const brew of brewUpdate.newBrews.filter((event) => this.isRecent(now, event.at))) {
-      const dose = doseForBrew(brew, this.realGrindBefore(brew, previous.lastRealGrind, grinds, threshold));
+      const dose = doseForBrew(brew, realGrindBefore(brew, [previous.lastRealGrind, ...grinds], threshold));
       await this.trigger(this.shotCompleted, {
         yield: brew.yieldG ?? 0,
         shot_time: brew.shotTimeS ?? 0,
@@ -91,16 +122,33 @@ export default class E64WSDevice extends SyncDevice {
         ratio: brewRatio(brew.yieldG, dose) ?? 0,
       });
     }
+
+    const changed = statusRefreshed
+      || state.recentGrinds.length !== previous.recentGrinds.length
+      || state.recentBrews.length !== previous.recentBrews.length
+      || state.lastGrindAt !== previous.lastGrindAt
+      || state.lastBrew?.uuid !== previous.lastBrew?.uuid;
+    if (changed) {
+      this.notifyWidget(grinderId);
+    }
   }
 
-  private async refreshStatus(grinderId: string, now: number) {
+  /** Tells open Espresso widgets to reload. A failure only costs a widget refresh. */
+  private notifyWidget(grinderId: string) {
+    try {
+      this.homey.api.realtime(WIDGET_UPDATED_EVENT, { deviceId: grinderId });
+    } catch (error) {
+      this.error('Widget update failed:', error instanceof Error ? error.message : error);
+    }
+  }
+
+  /** Refreshes standby, temperature, firmware and the paired scale. True when it succeeded. */
+  private async refreshStatus(grinderId: string, now: number): Promise<boolean> {
     try {
       const device = await this.client.getDevice(grinderId);
       const status = device.status?.status;
       await this.show('standby', status?.standbyActive);
       await this.show('measure_temperature', status?.motorTemperature);
-      await this.show('disc_usage', status?.discUsageTime);
-      await this.show('disc_health', status?.discHealth);
 
       const binding = await this.client.getScaleBinding(grinderId);
       this.scaleId = binding?.brewerId ?? binding?.brewer?.brewerId ?? null;
@@ -116,22 +164,15 @@ export default class E64WSDevice extends SyncDevice {
         scale: binding?.brewer?.serial ?? (this.scaleId !== null ? String(this.scaleId) : this.homey.__('settings.noScale')),
       });
       this.lastStatusAt = now;
+      return true;
     } catch (error) {
       // The status is extra information: don't let it block grind detection.
       if (!(error instanceof SyncApiError)) {
         throw error;
       }
       this.error(`Status refresh failed: ${error.message}`);
+      return false;
     }
-  }
-
-  /** The newest real (non-purge) grind at or before the shot, from the previous state and this poll. */
-  private realGrindBefore(brew: Brew, previousReal: Grind | null, grinds: Grind[], threshold: number): Grind | null {
-    const shotAt = Date.parse(brew.at);
-    return [previousReal, ...grinds.filter((grind) => !isPurge(grind, threshold))]
-      .filter(notNull)
-      .filter((grind) => Date.parse(grind.at) <= shotAt)
-      .sort((a, b) => Date.parse(b.at) - Date.parse(a.at))[0] ?? null;
   }
 
   private async showGrind(grind: Grind | null) {

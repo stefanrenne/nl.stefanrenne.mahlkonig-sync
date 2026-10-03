@@ -17,11 +17,13 @@ export default class SyncScaleDevice extends SyncDevice {
     const scaleId = this.getData().id as string;
     const previous: ScaleState = { ...emptyScaleState(), ...(this.getStoreValue('tracker') as Partial<ScaleState> | null) };
 
-    const brews = (await this.client.findBrewEvents(scaleId, this.windowStart(now, previous.lastBrew?.at ?? null), new Date(now + OVERLAP_MS)))
+    const brews = (await this.client.findBrewEvents(scaleId, this.lookbackStart(now), new Date(now + OVERLAP_MS)))
       .map(parseBrew)
       .filter(notNull);
     const update = ingestBrews(previous, brews, !previous.initialized);
     const state: ScaleState = { ...update.state, initialized: true };
+
+    this.log(`Poll: ${brews.length} shots (${update.newBrews.length} new)${previous.initialized ? '' : ' (baseline)'}`);
 
     // Persist first, so a failure further down never makes the same shot fire twice.
     await this.setStoreValue('tracker', state);

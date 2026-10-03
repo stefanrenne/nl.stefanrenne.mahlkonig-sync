@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      /* The widget body (homey-widget) already has the standard padding: none of our own. */
+      .entry + .entry {
+        margin-top: var(--homey-su-2);
+        padding-top: var(--homey-su-2);
+        border-top: var(--homey-line-light);
+      }
+      .time {
+        margin-bottom: var(--homey-su-1);
+      }
+      /* Two values per row: left and right, like the official app. */
+      .pair {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 2px var(--homey-su-2);
+      }
+      .pair + .pair {
+        margin-top: var(--homey-su-1);
+      }
+      .pair > :nth-child(2n) {
+        text-align: right;
+      }
+      .value {
+        font-variant-numeric: tabular-nums;
+      }
+      .message {
+        text-align: center;
+        padding: var(--homey-su-2) 0;
+      }
+    </style>
+  </head>
+
+  <body class="homey-widget">
+    <div id="container"></div>
+
+    <script type="text/javascript">
+      const $container = document.getElementById('container');
+
+      function onHomeyReady(Homey) {
+        const device = Homey.getSettings().device;
+
+        // Values only ever go into the page through textContent.
+        function el(tag, className, text) {
+          const node = document.createElement(tag);
+          if (className) node.className = className;
+          if (text !== undefined && text !== null) node.textContent = text;
+          return node;
+        }
+
+        function number(value, decimals, unit) {
+          if (value === null || value === undefined) return '–';
+          const text = Number(value).toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+          return `${text} ${unit}`;
+        }
+
+        // "08:59" today, "Wed 22:10" for yesterday evening.
+        function when(iso) {
+          const date = new Date(iso);
+          const time = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+          if (date.toDateString() === new Date().toDateString()) return time;
+          return `${date.toLocaleDateString(undefined, { weekday: 'short' })} ${time}`;
+        }
+
+        // One row of two labelled values: labels small, values below them.
+        function pair(left, right) {
+          const row = el('div', 'pair');
+          row.append(
+            el('div', 'homey-text-small-light', left[0]),
+            el('div', 'homey-text-small-light', right[0]),
+            el('div', 'homey-text-medium value', left[1]),
+            el('div', 'homey-text-medium value', right[1]),
+          );
+          return row;
+        }
+
+        function renderEntry(entry) {
+          const node = el('div', 'entry');
+          node.append(el('div', 'homey-text-small-light time', when(entry.at)));
+          if (entry.grind) {
+            node.append(pair(
+              [Homey.__('widget.grindWeight'), number(entry.grind.weightG, 1, 'g')],
+              [Homey.__('widget.discDistance'), number(entry.grind.discDistance, 0, 'µm')],
+            ));
+          }
+          if (entry.brew) {
+            node.append(pair(
+              [Homey.__('widget.brewWeight'), number(entry.brew.weightG, 1, 'g')],
+              [Homey.__('widget.brewTime'), number(entry.brew.timeS, 1, 's')],
+            ));
+          }
+          return node;
+        }
+
+        function showMessage(text) {
+          $container.replaceChildren(el('div', 'homey-text-small-light message', text));
+        }
+
+        async function load() {
+          if (!device || !device.id) {
+            showMessage(Homey.__('widget.chooseGrinder'));
+            return;
+          }
+          try {
+            const entries = await Homey.api('GET', `/timeline?device=${encodeURIComponent(device.id)}`, {});
+            if (entries.length === 0) {
+              showMessage(Homey.__('widget.empty'));
+              return;
+            }
+            $container.replaceChildren(...entries.map(renderEntry));
+          } catch (error) {
+            showMessage(Homey.__('widget.error', { message: error && error.message ? error.message : String(error) }));
+          }
+        }
+
+        // Homey ignores setHeight() before ready(), and fonts or wrapping can change the size after
+        // rendering: follow the content's height (plus the body's padding) whenever it changes.
+        // Not body.scrollHeight: the body can be stretched to the iframe's height.
+        let lastHeight = 0;
+        function fitHeight() {
+          const style = getComputedStyle(document.body);
+          const padding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+          const height = Math.ceil($container.getBoundingClientRect().height + padding);
+          if (height > 0 && height !== lastHeight) {
+            lastHeight = height;
+            Homey.setHeight(height);
+          }
+        }
+
+        Homey.on('espresso.updated', (data) => {
+          if (device && data && String(data.deviceId) === String(device.id)) {
+            load();
+          }
+        });
+
+        Homey.ready();
+        new ResizeObserver(fitHeight).observe($container);
+        load().finally(fitHeight);
+      }
+    </script>
+  </body>
+</html>

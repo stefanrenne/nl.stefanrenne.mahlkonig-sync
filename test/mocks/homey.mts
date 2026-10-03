@@ -59,6 +59,11 @@ class Device {
     }
   }
 
+  async removeCapability(id: string) {
+    this.capabilities = this.capabilities.filter((capability) => capability !== id)
+    this.capabilityValues.delete(id)
+  }
+
   async setAvailable() {
     this.available = true
     this.unavailableMessage = undefined

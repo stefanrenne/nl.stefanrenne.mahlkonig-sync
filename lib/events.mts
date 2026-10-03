@@ -36,14 +36,28 @@ export interface TrackerState {
   lastRealGrind: Grind | null;
   /** The newest Sync Scale shot seen. */
   lastBrew: Brew | null;
+  /** The most recent grinds (purges included), oldest first: history and today's statistics. */
+  recentGrinds: Grind[];
+  /** The most recent shots, oldest first. */
+  recentBrews: Brew[];
 }
 
 const SEEN_LIMIT = 200;
+const RECENT_GRINDS_LIMIT = 100;
+const RECENT_BREWS_LIMIT = 50;
 /** A shot only gets a dose and ratio when the grind came at most this long before it. */
 export const MAX_GRIND_TO_SHOT_MS = 15 * 60_000;
 
 export function emptyTrackerState(): TrackerState {
-  return { initialized: false, lastGrindAt: null, seenGrindUuids: [], lastRealGrind: null, lastBrew: null };
+  return {
+    initialized: false,
+    lastGrindAt: null,
+    seenGrindUuids: [],
+    lastRealGrind: null,
+    lastBrew: null,
+    recentGrinds: [],
+    recentBrews: [],
+  };
 }
 
 const round1 = (value: number) => Math.round(value * 10) / 10;
@@ -115,6 +129,21 @@ export function doseForBrew(brew: Brew, lastRealGrind: Grind | null): number | n
   return gap >= 0 && gap <= MAX_GRIND_TO_SHOT_MS ? lastRealGrind.doseG : null;
 }
 
+/** The newest real (non-purge) grind at or before the shot, from any list of grinds. */
+export function realGrindBefore(brew: Brew, grinds: (Grind | null)[], purgeThresholdG: number): Grind | null {
+  const shotAt = Date.parse(brew.at);
+  return grinds
+    .filter((grind): grind is Grind => grind !== null && !isPurge(grind, purgeThresholdG) && Date.parse(grind.at) <= shotAt)
+    .sort((a, b) => Date.parse(b.at) - Date.parse(a.at))[0] ?? null;
+}
+
+/** Appends events to a recent list: unique by id, oldest first, capped to the newest `limit`. */
+function remember<T extends { uuid: string; at: string }>(recent: T[], events: T[], limit: number): T[] {
+  return [...new Map([...recent, ...events].map((event) => [event.uuid, event])).values()]
+    .sort((a, b) => Date.parse(a.at) - Date.parse(b.at))
+    .slice(-limit);
+}
+
 /** Brew ratio yield ÷ dose, e.g. 2.0 for a 1:2 shot. */
 export function brewRatio(yieldG: number | null, doseG: number | null): number | null {
   if (yieldG === null || doseG === null || doseG <= 0) {
@@ -157,6 +186,8 @@ export function ingestGrinds(state: TrackerState, grinds: Grind[], purgeThreshol
       lastGrindAt,
       lastRealGrind,
       seenGrindUuids: [...state.seenGrindUuids, ...fresh.map((grind) => grind.uuid)].slice(-SEEN_LIMIT),
+      // Every grind fetched, not only new ones, so a state without history fills up again.
+      recentGrinds: remember(state.recentGrinds ?? [], unique, RECENT_GRINDS_LIMIT),
     },
     newGrinds: state.initialized ? fresh : [],
   };
@@ -194,4 +225,9 @@ export function ingestBrews<S extends { lastBrew: Brew | null }>(state: S, brews
     state: { ...state, lastBrew: fresh[fresh.length - 1] },
     newBrews: baseline ? [] : fresh,
   };
+}
+
+/** Adds shots to a state's recent shots (oldest first, newest 50 kept). */
+export function rememberBrews<S extends { recentBrews: Brew[] }>(state: S, brews: Brew[]): S {
+  return brews.length === 0 ? state : { ...state, recentBrews: remember(state.recentBrews ?? [], brews, RECENT_BREWS_LIMIT) };
 }

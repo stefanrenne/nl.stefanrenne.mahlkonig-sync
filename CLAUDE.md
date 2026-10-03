@@ -7,8 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 A Homey Pro app that brings the grind and shot data of a Mahlkönig E64 WS grinder (and a paired
 Sync Scale) into Homey. The grinder has no local API, so the app polls the **Mahlkönig Sync cloud**
 through the same undocumented **mobile API** the official Sync iOS/Android app uses
-(`/api/mobile-service/…`). Two drivers, `e64ws` (the grinder) and `sync-scale`, no settings page,
-no widgets. TypeScript as ES
+(`/api/mobile-service/…`). Two drivers, `e64ws` (the grinder) and `sync-scale`, one dashboard widget
+(`espresso`), no settings page. TypeScript as ES
 modules (`.mts`, imported with `.mjs` extensions), Node 22, `platforms: ["local"]`.
 
 ## Commands
@@ -36,7 +36,8 @@ test. Put tests in the file that matches the layer you changed: `test/syncClient
 client), `test/events.test.mts` (parsing, purges, new-event detection), `test/device.test.mts`
 (grinder polling, capabilities, triggers, errors, and the shared `lib/SyncDevice.mts`),
 `test/driver.test.mts` (grinder pairing, repair, condition, and the shared `lib/SyncDriver.mts`),
-`test/scale.test.mts` (the Sync Scale device and driver),
+`test/scale.test.mts` (the Sync Scale device and driver), `test/summary.test.mts` (the widget's
+24-hour list and grind/shot matching), `test/widget.test.mts` (widget API and grinder picker),
 `test/manifest.test.mts` (compose files, translations, versions). Only change existing assertions
 when the behaviour change is intended, and say so in the commit. See docs/testing.md.
 
@@ -64,6 +65,8 @@ finish an item, move it to `COMPLETED.md` in the same change. The "Known issues"
 - `docs/device.md`: the `e64ws` device: pairing, the poll cycle, tracker state, capabilities,
   settings, error handling (also the shared poll loop and pairing).
 - `docs/scale.md`: the `sync-scale` device.
+- `docs/widget.md`: the Espresso dashboard widget: the 24-hour list, grind/shot matching, API,
+  refresh, layout.
 - `docs/flow-cards.md`: the flow cards, their tokens and when they fire.
 - `docs/testing.md`: test setup, fakes, fixtures and conventions.
 - `docs/history.md`: how the API was found, and deliberate decisions not to revisit.
@@ -101,13 +104,17 @@ When finishing a feature, check both before committing.
 
 - `.homeycompose/app.json` (id, version, name, images, contributors)
 - `.homeycompose/capabilities/*.json` (all custom capabilities, including the Sync Scale ones the
-  device adds at runtime)
+  device adds at runtime, and `disc_usage` / `disc_health`, which no driver lists but which must
+  stay defined so existing devices can have them removed: never delete a capability definition
+  that a migration removes)
 - `drivers/<id>/driver.compose.json` (class, capabilities, pairing and repair views), for `e64ws`
   and `sync-scale`
 - `drivers/<id>/driver.settings.compose.json` (device settings and read-only labels)
 - `drivers/<id>/driver.flow.compose.json` (all flow cards: they are device cards, so the device
   argument is added automatically; there is no `.homeycompose/flow/`). Card ids are app-wide:
   the scale's trigger is `scale_shot_completed`.
+- `widgets/espresso/widget.compose.json` (widget settings and api routes; previews and
+  `public/index.html` next to it)
 
 ## Architecture
 
@@ -124,7 +131,7 @@ When finishing a feature, check both before committing.
   backoff, availability, repair, pairing (`login_credentials` → `list_devices`), and helpers.
   Subclasses implement `poll()` and `listDevices()`.
 - **`drivers/e64ws/device.mts`** polls the grinder: every poll asks for
-  the grinder's grind events (and the scale's brew events) since just before the newest one seen,
+  the grinder's grind events (and the scale's brew events) of the last 24 hours,
   feeds them through `events.mts`, **persists the tracker state in the device store before firing
   triggers**, then updates capabilities and fires the cards. The status block (standby,
   temperature, firmware, paired scale) is refreshed every 10 minutes.
@@ -133,6 +140,10 @@ When finishing a feature, check both before committing.
 - **`drivers/sync-scale/`** lists the account's scales and polls one scale's brew events: yield,
   shot time and `scale_shot_completed`. No dose or ratio (those stay on the grinder, which also
   keeps its own shot capabilities and card: a shot fires on both devices, on purpose).
+- **`widgets/espresso/`** lists the last 24 hours (grinds and shots, matched by time) from the
+  grinder device's stored state through `widgetTimeline()` (`lib/summary.mts`, pure) and never
+  calls the cloud. The grinder emits `espresso.updated` after
+  a poll that changed something; `app.mts` registers the widget's grinder picker.
 - Credentials live in the device store (`email`, `password`) and are never logged. Tokens live only
   in memory.
 

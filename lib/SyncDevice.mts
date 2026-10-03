@@ -5,7 +5,7 @@ export const MINUTE = 60_000;
 const MAX_BACKOFF_MS = 30 * MINUTE;
 /** How far back each poll looks for events, at most. */
 const LOOKBACK_MS = 24 * 60 * MINUTE;
-/** Re-read a little before the newest event seen, and a little past "now", for clock skew. */
+/** Read a little past "now", for clock skew between the grinder and Homey. */
 export const OVERLAP_MS = 5 * MINUTE;
 /** Events older than this when first seen (e.g. after Homey was offline) don't fire triggers. */
 export const MAX_TRIGGER_AGE_MS = 60 * MINUTE;
@@ -118,10 +118,9 @@ export default abstract class SyncDevice extends Homey.Device {
     }).format(new Date(iso));
   }
 
-  /** Start of a poll window: just before the newest event seen, but at most 24 hours back. */
-  protected windowStart(now: number, lastSeenAt: string | null): Date {
-    const sinceLastSeen = lastSeenAt === null ? -Infinity : Date.parse(lastSeenAt) - OVERLAP_MS;
-    return new Date(Math.max(now - LOOKBACK_MS, sinceLastSeen));
+  /** Start of a poll window: 24 hours back. Every poll reads the whole window. */
+  protected lookbackStart(now: number): Date {
+    return new Date(now - LOOKBACK_MS);
   }
 
   /** True when an event is recent enough to fire a trigger. */

@@ -35,14 +35,15 @@ All scheduling goes through `homey.setTimeout` / `homey.clearTimeout`.
 ## The poll cycle (`poll()`)
 
 1. **Status** (first poll, then at most every 10 minutes): `getDevice(grinderId)` →
-   `standby`, `measure_temperature`, `disc_usage`, `disc_health`; `getScaleBinding(grinderId)` →
+   `standby`, `measure_temperature`; `getScaleBinding(grinderId)` →
    remembers the scale id and adds the scale capabilities; updates the label settings `model`,
    `serial`, `firmware` (`hmiSwVersion / espSwVersion`) and `scale`. A `SyncApiError` here is
    logged and ignored, so grind detection still runs; a `SyncAuthError` fails the poll.
-2. **Grinds**: `findGrindEvents(grinderId, from, now + 5 min)` where `from` is
-   `max(now − 24 h, lastGrindAt − 5 min)`. Parsed with `parseGrind`, fed to `ingestGrinds`.
-3. **Shots** (only with a paired scale): `findBrewEvents(scaleId, …)` with the same window logic
-   on the last shot's time, fed to `ingestBrews`.
+2. **Grinds**: `findGrindEvents(grinderId, now − 24 h, now + 5 min)`: every poll reads the whole
+   last 24 hours, so the widget's list is complete and no event is missed. Parsed with
+   `parseGrind`, fed to `ingestGrinds` (new = not seen before and not older than the newest seen).
+3. **Shots** (only with a paired scale): `findBrewEvents(scaleId, …)` over the same 24 hours, fed
+   to `ingestBrews`.
 4. **Persist** the new `TrackerState` in the store key `tracker`.
 5. **Capabilities**: the last real grind (never a purge) and the last shot.
 6. **Triggers**: "Grind completed" for each new grind, then "Shot completed" for each new shot,
@@ -51,6 +52,11 @@ All scheduling goes through `homey.setTimeout` / `homey.clearTimeout`.
 
 Persisting before triggering means a crash or error after step 4 can lose a trigger but never
 fires one twice.
+
+7. **Widget**: when the poll found a new grind or shot, or refreshed the status, emit the realtime
+   event `espresso.updated` with `{ deviceId }` (`docs/widget.md`). A failure is logged.
+
+`widgetTimeline(now)` builds the widget's list from the tracker state (`lib/summary.mts`).
 
 ## Tracker state (store key `tracker`)
 
@@ -61,6 +67,8 @@ fires one twice.
 | `seenGrindUuids` | The last 200 grind ids seen, so overlapping poll windows never fire twice. |
 | `lastRealGrind` | The newest non-purge grind, as a parsed `Grind`. Source of the grind capabilities and of the condition. |
 | `lastBrew` | The newest shot seen, as a parsed `Brew`. |
+| `recentGrinds` | The newest 100 grinds (purges included), oldest first, merged from every poll's 24-hour read. Source of the Espresso widget's list. |
+| `recentBrews` | The newest 50 shots, oldest first, filled the same way. |
 
 The state survives app restarts; a missing or partial value is merged over `emptyTrackerState()`.
 
@@ -75,14 +83,13 @@ grind was started (`triggerMode`) doesn't matter. Purges fire "Grind completed" 
 | Capability | Source | Notes |
 |---|---|---|
 | `dose_weight` (g) | `lastRealGrind.doseG` | |
-| `grind_setting` | `lastRealGrind.grindSetting` (`dddActual`) | Unit unknown |
+| `grind_setting` (µm) | `lastRealGrind.grindSetting` (`dddActual`) | The disc distance; µm per the official app |
 | `grind_time` (s) | `lastRealGrind.grindTimeS` | |
 | `last_grind` (string) | `lastRealGrind.at`, formatted with `Intl.DateTimeFormat` in the Homey language and time zone (`dateStyle`/`timeStyle: short`) | |
 | `dose_target` (g), `grind_setting_target`, `brew_time_target` (s) | Recipe values of the last real grind | A recipe value of 0 means "no target" and leaves the capability unchanged |
 | `recipe_mode` (string) | `payload.recipeMode`, raw (e.g. `Gbw`) | |
 | `standby` (boolean) | `status.status.standbyActive` | |
 | `measure_temperature` | `status.status.motorTemperature` | Titled "Motor temperature"; °C assumed |
-| `disc_usage`, `disc_health` | `status.status.discUsageTime`, `discHealth` | Units unknown |
 | `yield_weight` (g), `shot_time` (s), `brew_ratio` | Last shot; ratio uses the dose of the last real grind ≤ 15 min before it | Added at runtime when a scale is paired or a shot is seen |
 
 A capability is only written when the value is known (not `null`) and changed.
@@ -101,5 +108,11 @@ A capability is only written when the value is known (not `null`) and changed.
   check still prevents repeats. Not realistic for a home grinder.
 - Brew events from `findBrewEvents` haven't been seen in a live response yet (the capture day had
   no shots); the parser assumes the same shape as `last-events.lastBrew`. See TODO.md.
-- Units of `grind_setting`, `disc_usage` and `disc_health`, and the °C of the motor temperature,
-  are unverified. See TODO.md.
+- The °C of the motor temperature is unverified. See TODO.md.
+- A grind can report 0.0 g (the official app shows it with its full shortfall to the target). The
+  purge rule counts it as a purge, so it doesn't update the grind capabilities. See TODO.md.
+- `discUsageTime` and `discHealth` from the status block are not shown: their meaning is unknown.
+  Devices paired with an earlier build had `disc_usage` / `disc_health` capabilities; `onSyncInit`
+  removes them. Their definitions stay in `.homeycompose/capabilities/` (not in the driver's list):
+  Homey refuses to remove a capability the app no longer defines ("Invalid Capability", 404). A
+  failed removal is logged and never stops the device from starting.

@@ -91,6 +91,16 @@ describe('drivers', () => {
     }
   })
 
+  it('capabilities removed from existing devices are still defined, or Homey refuses to remove them', () => {
+    // drivers/e64ws/device.mts REMOVED_CAPABILITIES
+    for (const capability of ['disc_usage', 'disc_health']) {
+      expect(manifest.capabilities[capability], capability).toBeDefined()
+      for (const driver of manifest.drivers as { capabilities: string[] }[]) {
+        expect(driver.capabilities).not.toContain(capability)
+      }
+    }
+  })
+
   it('the Sync Scale capabilities the device adds at runtime are defined', () => {
     for (const capability of ['yield_weight', 'shot_time', 'brew_ratio']) {
       expect(manifest.capabilities[capability], capability).toBeDefined()
@@ -104,6 +114,25 @@ describe('drivers', () => {
     ]
     for (const path of paths) {
       expect(existsSync(join(root, path)), path).toBe(true)
+    }
+  })
+})
+
+describe('widgets', () => {
+  const widgetIds = existsSync(join(root, 'widgets'))
+    ? readdirSync(join(root, 'widgets'), { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name)
+    : []
+
+  it.each(widgetIds)('%s is in app.json with its api routes', (id) => {
+    const composed = readJson(`widgets/${id}/widget.compose.json`)
+    const generated = readJson('app.json').widgets?.[id]
+    expect(generated, id).toBeDefined()
+    expect(Object.keys(generated.api ?? {}).sort()).toEqual(Object.keys(composed.api ?? {}).sort())
+  })
+
+  it.each(widgetIds)('%s has light and dark previews and a page', (id) => {
+    for (const file of ['preview-light.png', 'preview-dark.png', 'public/index.html']) {
+      expect(existsSync(join(root, 'widgets', id, file)), `${id}/${file}`).toBe(true)
     }
   })
 })

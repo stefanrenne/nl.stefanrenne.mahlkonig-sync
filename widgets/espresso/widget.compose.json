@@ -1,0 +1,24 @@
+{
+  "name": {
+    "en": "Espresso",
+    "nl": "Espresso"
+  },
+  "height": 280,
+  "transparent": false,
+  "api": {
+    "getTimeline": {
+      "method": "GET",
+      "path": "/timeline"
+    }
+  },
+  "settings": [
+    {
+      "id": "device",
+      "type": "autocomplete",
+      "title": {
+        "en": "Grinder",
+        "nl": "Molen"
+      }
+    }
+  ]
+}

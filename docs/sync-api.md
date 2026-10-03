@@ -218,8 +218,8 @@ From `grind-event/find` and `last-events.lastGrind`:
 - Values seen: `recipeMode` `"Gbw"` (grind by weight), `triggerMode` `"StartButton"` /
   `"PortafilterDetection"`, `filterType` `"DOUBLE"`, `recipeType` `"DoubleShot"`,
   `recipeIcon` `"DoubleCup"`. Other values are **open** (Q6).
-- `dddActual` / `dddRecipe`: the grind setting, 139 vs 140; the model's `dddMax` is 400 and
-  recipes call it `coarseness`. Unit **open** (Q5).
+- `dddActual` / `dddRecipe`: the disc distance in µm, 139 vs 140 (the official app labels it
+  "Disc distance … µm"); the model's `dddMax` is 400 and recipes call it `coarseness`.
 - `sizeTheoretic` / `sizeRecipe` (69 / 70): meaning **open**.
 
 ### Brew event (Sync Scale)
@@ -457,7 +457,7 @@ Grind values come from `POST grind-event/find`, shot values from `POST device-ev
 | Requested | Source | Status |
 |---|---|---|
 | Dose weight (g) | `payload.weightActual` / 1000 | App |
-| Grind setting | `payload.dddActual` | App; unit Q5 |
+| Grind setting (disc distance, µm) | `payload.dddActual` | App |
 | Grind time (s) | `payload.durationActual` / 1000 | App |
 | Last grind timestamp | `deviceDate` | App |
 | Yield (g), shot time (s) | brew `payload.mass`, `payload.duration` / 1000 | App; only with Sync Scale |
@@ -480,8 +480,8 @@ references stay valid.
 - **Q3 Response envelope.** ✅ Varies per endpoint: bare arrays (`*-event/find`),
   `{ stamp, rows, items }` (queries), plain objects or numbers (App).
 - **Q4 Grinds without a brew.** ✅ Every grind is its own event, purges included (App).
-- **Q5 Grind setting.** Open: unit of `dddActual` (139 for the maintainer's grinder; model
-  `dddMax` 400). It's what the recipe calls `coarseness`. Show it as a plain number until known.
+- **Q5 Grind setting.** ✅ `dddActual` is the **disc distance in µm**: the official app shows it as
+  "Disc distance 139 µm" (App, 2026-10-02 history screen). The recipe calls it `coarseness`.
 - **Q6 Enum values.** Partly answered (see [Grind event](#grind-event)). Open: the full sets.
 - **Q7 Timestamps.** ✅ `deviceDate` (grinder clock, UTC), `cloudDate` (receipt, UTC),
   `localDate` (no zone) (App).

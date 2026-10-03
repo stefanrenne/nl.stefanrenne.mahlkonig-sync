@@ -16,11 +16,22 @@ Status: `[ ]` open, `[~]` in progress, `[?]` needs a decision or verification.
   for anything against third-party access before publishing to the App Store.
 - [ ] Add `homeyCommunityTopicId` to `.homeycompose/app.json` once there's a forum topic.
 
+- [ ] **Try the Espresso widget's 24-hour list on a real dashboard**: light and dark, phone and
+  tablet width, the grinder picker, refreshing after a grind, the empty and "choose a grinder"
+  states, and that the day matches the official app's history.
+
 ## Verify on real data
 
-- [?] **Units**: `grind_setting` (`dddActual`, 139 on the maintainer's grinder, model `dddMax`
-  400), `disc_usage` (`discUsageTime`), `disc_health` (`discHealth`), and °C for
-  `measure_temperature` (`motorTemperature`, 34). Show plain numbers until known.
+- [?] **A grind of 0.0 g counts as a purge.** On 2026-10-02 at 13:31 the grinder reported 0.0 g
+  (target 20 g) followed by a 42.5 g shot; the official app shows it as a normal grind with a
+  −20 g shortfall. The purge rule (dose < 5 g) fires "Grind completed" with `is_purge` and keeps
+  the previous grind on the capabilities. Decide: treat 0.0 g as "weight unknown" (not a purge)?
+
+- [?] **Units**: °C for `measure_temperature` (`motorTemperature`, 34). (`grind_setting` is the
+  disc distance in µm, confirmed by the official app.)
+- [?] **Disc usage / disc health** (`discUsageTime`, `discHealth` in the status block): hidden
+  until their meaning is known. Compare with what the Sync app shows about disc wear; if it
+  matches, add them back as capabilities and in the widget (docs/history.md).
   (`docs/sync-api.md` Q5; `.homeycompose/capabilities/`)
 - [?] **Recipe mode values**: only `Gbw` seen. If others turn out to be codes (e.g. `Gbt`),
   consider showing a readable name instead of the raw value (`recipe_mode`).

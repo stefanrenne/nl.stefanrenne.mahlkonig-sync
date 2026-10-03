@@ -46,9 +46,22 @@ export function createFakeHomey() {
     return result
   }
 
+  // Devices per driver id, for code that looks devices up through homey.drivers.
+  const devices = new Map<string, unknown[]>()
+  const widgetAutocomplete = new Map<string, (query: string) => unknown>()
+
   const homey = {
     manifest,
     flow: { getConditionCard: card, getDeviceTriggerCard: card },
+    api: { realtime: vi.fn((_event: string, _data: unknown) => undefined) },
+    drivers: { getDriver: (id: string) => ({ getDevices: () => devices.get(id) ?? [] }) },
+    dashboards: {
+      getWidget: (_id: string) => ({
+        registerSettingAutocompleteListener: (name: string, listener: (query: string) => unknown) => {
+          widgetAutocomplete.set(name, listener)
+        },
+      }),
+    },
     // Returns the key plus its placeholders, so tests assert on keys rather than English text.
     __: (key: string, tokens?: Record<string, string>) => (tokens ? `${key} ${JSON.stringify(tokens)}` : key),
     i18n: { getLanguage: () => 'en' },
@@ -58,7 +71,7 @@ export function createFakeHomey() {
     clearTimeout: vi.fn(),
   }
 
-  return { homey, card, cards }
+  return { homey, card, cards, devices, widgetAutocomplete }
 }
 
 export type FakeHomey = ReturnType<typeof createFakeHomey>['homey']

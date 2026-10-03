@@ -22,7 +22,7 @@ function createFakeClient() {
 type FakeClient = ReturnType<typeof createFakeClient>
 
 type DeviceMethods = Pick<InstanceType<typeof E64WSDevice>,
-  'onInit' | 'tick' | 'poll' | 'lastGrindWithin' | 'onSettings' | 'updateCredentials' | 'onDeleted'>
+  'onInit' | 'tick' | 'poll' | 'lastGrindWithin' | 'onSettings' | 'updateCredentials' | 'onDeleted' | 'widgetTimeline'>
 type Harness = DeviceMethods & {
   capabilities: string[]
   capabilityValues: Map<string, unknown>
@@ -127,8 +127,6 @@ describe('first poll (baseline)', () => {
     expect(Object.fromEntries(device.capabilityValues)).toMatchObject({
       standby: true,
       measure_temperature: 34,
-      disc_usage: 4,
-      disc_health: 0,
     })
     expect(device.capabilities).toEqual(expect.arrayContaining(['yield_weight', 'shot_time', 'brew_ratio']))
     expect(device.settings).toMatchObject({
@@ -237,7 +235,7 @@ describe('Grind completed', () => {
     expect(card('grind_completed').trigger).toHaveBeenCalledTimes(1)
   })
 
-  it('looks back from just before the newest grind it saw', async () => {
+  it('reads the whole last 24 hours on every poll, not only since the newest grind it saw', async () => {
     const device = createDevice()
     await device.onInit()
     await pollTwice(device, [grindEvent('shot', 10, 19_976)])
@@ -245,7 +243,7 @@ describe('Grind completed', () => {
     await device.poll()
 
     const from = client.findGrindEvents.mock.calls.at(-1)?.[1] as Date
-    expect(from.toISOString()).toBe('2026-10-02T07:15:00.000Z')
+    expect(from.toISOString()).toBe('2026-10-01T07:30:00.000Z')
   })
 })
 
@@ -401,5 +399,101 @@ describe('Last grind was less than … minutes ago', () => {
     await device.onInit()
 
     expect(device.lastGrindWithin(60)).toBe(false)
+  })
+})
+
+describe('Espresso widget', () => {
+  it('tells open widgets to reload after a poll that found something new', async () => {
+    const device = createDevice()
+    await device.onInit()
+    await device.poll() // baseline: the status was fetched
+    expect(homey.api.realtime).toHaveBeenCalledWith('espresso.updated', { deviceId: 'GRINDER-1' })
+    homey.api.realtime.mockClear()
+
+    await device.poll() // nothing new, status not due
+    expect(homey.api.realtime).not.toHaveBeenCalled()
+
+    client.findGrindEvents.mockResolvedValueOnce([grindEvent('new', 1, 18_000)])
+    await device.poll()
+    expect(homey.api.realtime).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps polling when the widget notification fails', async () => {
+    homey.api.realtime.mockImplementation(() => {
+      throw new Error('no realtime')
+    })
+    const device = createDevice()
+    await device.onInit()
+
+    await device.tick()
+
+    expect(device.available).toBe(true)
+  })
+
+  it('lists the stored grinds and shots of the last 24 hours, shots matched with their grinds', async () => {
+    const device = createDevice()
+    await device.onInit()
+    client.findGrindEvents.mockResolvedValueOnce([grindEvent('purge', 20, 1_500, 'StartButton'), grindEvent('real', 25, 18_000)])
+    client.findBrewEvents.mockResolvedValueOnce([brewEvent('shot', 18, 36_000)])
+    await device.poll()
+
+    expect(device.widgetTimeline(Date.now())).toEqual([
+      { at: expect.any(String), grind: { weightG: 1.5, discDistance: 139 }, brew: { weightG: 36, timeS: 27.5 } },
+      { at: expect.any(String), grind: { weightG: 18, discDistance: 139 }, brew: null },
+    ])
+  })
+})
+
+describe('upgrading devices paired with an older version', () => {
+  it('keeps starting and polling when removing an old capability fails', async () => {
+    const device = createDevice() as Harness & { removeCapability(id: string): Promise<void> }
+    device.capabilities.push('disc_health')
+    device.removeCapability = async () => {
+      throw new Error('Invalid Capability: disc_health')
+    }
+
+    await device.onInit()
+    await device.tick()
+
+    expect(device.available).toBe(true)
+    expect(client.findGrindEvents).toHaveBeenCalled()
+    expect(JSON.stringify(device.errors)).toContain('Removing disc_health failed')
+  })
+
+  it('removes the disc usage and disc health capabilities', async () => {
+    const device = createDevice()
+    device.capabilities.push('disc_usage', 'disc_health')
+
+    await device.onInit()
+
+    expect(device.capabilities).not.toContain('disc_usage')
+    expect(device.capabilities).not.toContain('disc_health')
+  })
+
+  it('fills the recent lists from the last 24 hours, without firing for grinds it already saw', async () => {
+    const seen = grindEvent('seen', 30, 18_000)
+    const store = {
+      email: 'user@example.com',
+      password: 'secret',
+      // A tracker stored before recentGrinds/recentBrews existed.
+      tracker: {
+        initialized: true,
+        lastGrindAt: seen.deviceDate,
+        seenGrindUuids: ['seen'],
+        lastRealGrind: null,
+        lastBrew: null,
+      },
+    }
+    const device = createDevice(store)
+    await device.onInit()
+    client.findGrindEvents.mockResolvedValueOnce([grindEvent('earlier', 300, 18_000), seen])
+
+    await device.poll()
+
+    const from = client.findGrindEvents.mock.calls[0][1] as Date
+    expect(from.toISOString()).toBe('2026-10-01T07:30:00.000Z')
+    expect(card('grind_completed').trigger).not.toHaveBeenCalled()
+    expect(device.widgetTimeline(Date.now())).toHaveLength(2)
+    expect(homey.api.realtime).toHaveBeenCalled()
   })
 })

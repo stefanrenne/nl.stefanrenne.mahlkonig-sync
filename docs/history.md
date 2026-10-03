@@ -43,5 +43,15 @@ These were the maintainer's calls. Don't file them as bugs or reopen them withou
 - **App id `nl.stefanrenne.mahlkonig-sync`**, the same as the GitHub repo and the local folder
   ("mahlkonig", no "oe"). The original brief said `nl.stefanrenne.mahlkoenig-sync`; it was changed
   before the first release. Don't change it again: an app id can't change after publishing.
+- **Disc usage and disc health are hidden** (device and widget): the cloud's `discUsageTime` and
+  `discHealth` are undocumented and their meaning couldn't be verified (`discHealth` was 0 on a
+  nearly new grinder). Show them again only once their meaning is known.
+- **The Espresso widget is one merged list of the last 24 hours**, like the official app's history:
+  grinds and shots, each shot matched with the newest grind up to 15 minutes before it. A first
+  version with "last grind/shot", "today", "status" and "recent grinds" sections was replaced on
+  2026-10-02 at the maintainer's request. The widget never calls the cloud.
+- **Every grinder poll reads the whole last 24 hours** (grinds and shots) instead of only "since the
+  newest event seen". The shorter window made the widget's list miss events (2026-10-02: only 1 of
+  4 events of the day reached it).
 - **`.mts` instead of `.ts`.** The brief named `lib/SyncClient.ts`; the file is
   `lib/SyncClient.mts` to match the maintainer's other apps (TypeScript as ES modules).

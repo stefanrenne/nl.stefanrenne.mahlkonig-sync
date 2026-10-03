@@ -12,5 +12,15 @@
   "settings": {
     "noScale": "Niet gekoppeld",
     "noGrinder": "Niet gekoppeld"
+  },
+  "widget": {
+    "chooseGrinder": "Kies een molen in de widgetinstellingen.",
+    "noDevice": "Deze molen staat niet meer in Homey. Kies een andere in de widgetinstellingen.",
+    "error": "De molen kon niet worden geladen: __message__",
+    "empty": "Geen maalbeurten of shots in de afgelopen 24 uur",
+    "grindWeight": "Maalgewicht",
+    "discDistance": "Schijfafstand",
+    "brewWeight": "Shotgewicht",
+    "brewTime": "Shottijd"
   }
 }

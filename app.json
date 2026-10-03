@@ -295,9 +295,7 @@
         "brew_time_target",
         "recipe_mode",
         "standby",
-        "measure_temperature",
-        "disc_usage",
-        "disc_health"
+        "measure_temperature"
       ],
       "capabilitiesOptions": {
         "measure_temperature": {
@@ -605,6 +603,33 @@
       ]
     }
   ],
+  "widgets": {
+    "espresso": {
+      "name": {
+        "en": "Espresso",
+        "nl": "Espresso"
+      },
+      "height": 280,
+      "transparent": false,
+      "api": {
+        "getTimeline": {
+          "method": "GET",
+          "path": "/timeline"
+        }
+      },
+      "settings": [
+        {
+          "id": "device",
+          "type": "autocomplete",
+          "title": {
+            "en": "Grinder",
+            "nl": "Molen"
+          }
+        }
+      ],
+      "id": "espresso"
+    }
+  },
   "capabilities": {
     "brew_ratio": {
       "type": "number",
@@ -700,7 +725,11 @@
       "setable": false,
       "uiComponent": "sensor",
       "decimals": 0,
-      "insights": true
+      "insights": true,
+      "units": {
+        "en": "µm",
+        "nl": "µm"
+      }
     },
     "grind_setting_target": {
       "type": "number",
@@ -712,7 +741,11 @@
       "setable": false,
       "uiComponent": "sensor",
       "decimals": 0,
-      "insights": true
+      "insights": true,
+      "units": {
+        "en": "µm",
+        "nl": "µm"
+      }
     },
     "grind_time": {
       "type": "number",
