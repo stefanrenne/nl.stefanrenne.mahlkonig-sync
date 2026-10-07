@@ -517,5 +517,12 @@ references stay valid.
 - **Q12 Grind–brew pairing.** ✅ A shot carries `payload.grindEventUuid` (Live, 2026-10-07); a
   shot without it had no grind (scale only).
 - **Q13 Request headers.** ✅ No custom headers needed (Live, App).
-- **Q14 Terms of use.** Open. The API is undocumented and may change or be blocked without
-  notice. Terms: `https://www.mahlkoenig.com/pages/sync-terms-of-use`.
+- **Q14 Terms of use.** Read on 2026-10-07 (version July 2025, Hemro International AG,
+  `https://www.mahlkoenig.com/pages/sync-terms-of-use`). Nothing explicitly forbids API access,
+  automation or third-party apps. Relevant: §4 grants a limited, revocable right of use for
+  private, non-commercial use and forbids manipulating or modifying the App; §7 allows suspending
+  an account for violations, including granting unauthorized third parties access to the App;
+  §8 gives no guarantee of availability and allows restricting the service at any time. This app
+  only reads the user's own data with the user's own account and changes nothing; whether a Homey
+  app counts as an "unauthorized third party" under §7 is open. Not legal advice: publishing is
+  the maintainer's decision (TODO.md).

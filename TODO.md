@@ -8,8 +8,11 @@ Status: `[ ]` open, `[~]` in progress, `[?]` needs a decision or verification.
   ran there on 2026-10-02 – 2026-10-07. Still to see: the flow cards firing ("Grind completed" with
   a purge and an unweighed grind, both "Shot completed" cards), the condition, repair, and the
   device going unavailable without internet and recovering.
-- [?] **Terms of use** (`docs/sync-api.md`, Q14): check `https://www.mahlkoenig.com/pages/sync-terms-of-use`
-  for anything against third-party access before publishing to the App Store.
+- [?] **Terms of use: decide before publishing** (`docs/sync-api.md`, Q14). Read on 2026-10-07:
+  no explicit ban on API access or third-party apps, but §7 allows suspending an account that
+  gives "unauthorized third parties" access, and §4 limits use to private, non-commercial use.
+  Options: publish with the README's disclaimer (risk on the user's account), or ask Mahlkönig
+  first (sync@mahlkoenig.com).
 - [ ] Add `homeyCommunityTopicId` to `.homeycompose/app.json` once there's a forum topic.
 
 - [ ] **Espresso widget on a real dashboard, remaining checks**: light mode, tablet width, the count
