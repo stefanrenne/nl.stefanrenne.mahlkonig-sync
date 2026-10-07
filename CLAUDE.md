@@ -22,7 +22,7 @@ npx vitest run test/events.test.mts             # one file
 npx vitest run -t "purge"                       # tests by name
 homey app validate --level verified             # what CI runs, after lint and test
 homey app run                                   # run on a Homey Pro in debug mode
-node scripts/probe.mjs                          # probe the live API (see docs/sync-api.md)
+node scripts/probe.mjs [--bad-login]            # probe the live mobile API + run the app's SyncClient (Node 24+)
 mitmweb --mode wireguard -s scripts/capture.py  # capture the official app's traffic, redacted
 ```
 
@@ -140,7 +140,7 @@ When finishing a feature, check both before committing.
 - **`drivers/sync-scale/`** lists the account's scales and polls one scale's brew events: yield,
   shot time and `scale_shot_completed`. No dose or ratio (those stay on the grinder, which also
   keeps its own shot capabilities and card: a shot fires on both devices, on purpose).
-- **`widgets/espresso/`** shows the latest 1/3/5/10 grinds and shots (matched by time) from the
+- **`widgets/espresso/`** shows the latest 1/3/5/10 grinds and shots (joined by the cloud's `grindEventUuid`) from the
   grinder device's stored state through `widgetTimeline()` (`lib/summary.mts`, pure) and never
   calls the cloud. The grinder emits `espresso.updated` after
   a poll that changed something; `app.mts` registers the widget's grinder picker.

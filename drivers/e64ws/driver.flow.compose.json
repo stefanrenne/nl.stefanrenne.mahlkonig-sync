@@ -65,8 +65,8 @@
         "nl": "Shot voltooid"
       },
       "hint": {
-        "en": "Fires when the paired Sync Scale reports a shot. Dose and ratio come from the last grind (not a purge) up to 15 minutes before the shot, and are 0 when there was none.",
-        "nl": "Gaat af wanneer de gekoppelde Sync Scale een shot meldt. Dosis en verhouding komen van de laatste maalbeurt (geen purge) tot 15 minuten voor de shot, en zijn 0 als die er niet was."
+        "en": "Fires when the paired Sync Scale reports a shot. Dose and ratio come from the grind the Mahlkönig Sync cloud links to the shot, and are 0 when there is none.",
+        "nl": "Gaat af wanneer de gekoppelde Sync Scale een shot meldt. Dosis en verhouding komen van de maalbeurt die de Mahlkönig Sync-cloud aan de shot koppelt, en zijn 0 als die er niet is."
       },
       "tokens": [
         {

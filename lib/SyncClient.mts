@@ -106,7 +106,12 @@ export interface RawBrewEvent {
     duration?: number;
     mass?: number;
     stopType?: string;
+    /** The grind this shot belongs to (missing for a shot without a grind). */
+    grindEventUuid?: string;
+    grinderId?: string | number;
   };
+  /** The cloud's verdict on a shot with a grind: "PERFECT", "OK", … */
+  shotQuality?: { overall?: string; brewTime?: string; grindWeight?: string } | null;
 }
 
 export interface RawBrewerBinding {

@@ -2,7 +2,6 @@ import { type FlowCardTriggerDevice } from 'homey';
 import { SyncApiError } from '../../lib/SyncClient.mjs';
 import SyncDevice, { MINUTE, OVERLAP_MS } from '../../lib/SyncDevice.mjs';
 import {
-  doseForBrew,
   brewRatio,
   emptyTrackerState,
   ingestBrews,
@@ -10,7 +9,7 @@ import {
   isPurge,
   parseBrew,
   parseGrind,
-  realGrindBefore,
+  linkedGrind,
   rememberBrews,
   startedByPortafilter,
   type Brew,
@@ -101,7 +100,7 @@ export default class E64WSDevice extends SyncDevice {
     await this.setStoreValue('tracker', state);
     await this.showGrind(state.lastRealGrind);
     if (state.lastBrew !== null) {
-      await this.showBrew(state.lastBrew, realGrindBefore(state.lastBrew, [previous.lastRealGrind, ...grinds], threshold));
+      await this.showBrew(state.lastBrew, linkedGrind(state.lastBrew, [...grinds, ...state.recentGrinds, previous.lastRealGrind]));
     }
 
     for (const grind of grindUpdate.newGrinds.filter((event) => this.isRecent(now, event.at))) {
@@ -114,7 +113,8 @@ export default class E64WSDevice extends SyncDevice {
       });
     }
     for (const brew of brewUpdate.newBrews.filter((event) => this.isRecent(now, event.at))) {
-      const dose = doseForBrew(brew, realGrindBefore(brew, [previous.lastRealGrind, ...grinds], threshold));
+      // Dose and ratio come from the grind the cloud links this shot to; none without a link.
+      const dose = linkedGrind(brew, [...grinds, ...state.recentGrinds, previous.lastRealGrind])?.doseG ?? null;
       await this.trigger(this.shotCompleted, {
         yield: brew.yieldG ?? 0,
         shot_time: brew.shotTimeS ?? 0,
@@ -195,7 +195,7 @@ export default class E64WSDevice extends SyncDevice {
     await this.addScaleCapabilities();
     await this.show('yield_weight', brew.yieldG);
     await this.show('shot_time', brew.shotTimeS);
-    await this.show('brew_ratio', brewRatio(brew.yieldG, doseForBrew(brew, grind)));
+    await this.showOrClear('brew_ratio', brewRatio(brew.yieldG, grind?.doseG ?? null));
   }
 
   private async addScaleCapabilities() {

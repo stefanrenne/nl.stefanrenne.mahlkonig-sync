@@ -1,44 +1,36 @@
 #!/usr/bin/env node
-// Probe the Mahlkönig Sync cloud API to answer the open questions in docs/sync-api.md.
+// Probe the Mahlkönig Sync mobile API (the one the app uses) to answer the open questions in
+// TODO.md and docs/sync-api.md, and run the app's own SyncClient against the live cloud.
 //
-// Read-only: it logs in and runs a handful of shot-history queries (about 7 requests).
-// Credentials come from MK_EMAIL / MK_PASSWORD / MK_STORE_ID, or are asked for
-// interactively (the password is not echoed). They are never written to disk or printed.
+// Read-only: it logs in and makes about 15 requests. Credentials come from MK_EMAIL /
+// MK_PASSWORD, or are asked for interactively (the password is not echoed). They are never
+// written to disk or printed.
 //
-// The Store ID is optional. The login response carries the account's company id
-// (details.comp), and the official dashboards accept that instead: the admin dashboard lists
-// stores with POST /admin-service/store/query-managed {companyId}, and the chart app sends
-// the shot-history query with either storeId or companyId. Store names and ids found that
-// way are printed to the console only; the report aliases them.
+// The report (probe-output/probe-<timestamp>.json, gitignored) is redacted: personal and hardware
+// identifiers are replaced by stable aliases such as "<id:3>", so equal values stay recognisable
+// without revealing them. Look through it before sharing it anyway.
 //
-// The output (probe-output/probe-<timestamp>.json, gitignored) is redacted: personal and
-// hardware identifiers are replaced by stable aliases such as "<id:3>", so equal values
-// stay recognisable without revealing them. Look through it before sharing it anyway.
-//
-// Usage:
+// Usage (Node 24 or later: it imports lib/SyncClient.mts directly):
 //   node scripts/probe.mjs
 //   node scripts/probe.mjs --bad-login   # also try one deliberately wrong password (Q1)
 
 import { mkdir, writeFile } from 'node:fs/promises';
+import { SyncClient } from '../lib/SyncClient.mts';
 
-const BASE_URL = 'https://sync.mahlkoenig.com';
-const AUTH_PATH = '/api/security-service/auth/token';
-const QUERY_PATH = '/api/dashboard-service/shot-history/query';
-// Found in the admin dashboard bundle (admin.sync.mahlkoenig.com, config.base.json + services).
-const REFRESH_PATH = '/api/security-service/auth/refresh'; // GET, Bearer <refresh_token>
-const STORES_PATH = '/api/admin-service/store/query-managed';
-const DEVICES_PATH = '/api/admin-service/device/query';
-const TOKEN_KEYS = ['access_token', 'accessToken', 'token', 'id_token', 'jwt'];
+const BASE_URL = 'https://sync.mahlkoenig.com/api';
+const DAY_MS = 24 * 60 * 60_000;
+const PURGE_BELOW_G = 5;
 
-// Keys whose values identify a person, account or device. Matched case-insensitively.
+// Keys whose values identify a person, account or device. Matched case-insensitively, plus any
+// key ending in a device/user/organisation id (toBrewerId, fromDeviceId, …).
 const REDACT_KEYS = new Set([
   'user', 'username', 'email', 'mail', 'name', 'firstname', 'lastname', 'fullname',
-  'phone', 'address', 'street', 'city', 'zip', 'postalcode',
-  'serial', 'serialnumber', 'storeid', 'companyid', 'regionid', 'userid', 'accountid',
-  'deviceid', 'grinderid', 'brewerid', 'bindingcode', 'hmihwproductid', 'macaddress', 'mac', 'ip',
+  'phone', 'address', 'street', 'city', 'zip', 'postalcode', 'serial', 'serialnumber',
+  'bindingcode', 'hmihwproductid', 'macaddress', 'mac', 'ip', 'key', 'profileid',
   'password', 'secret', 'access_token', 'accesstoken', 'refresh_token', 'refreshtoken',
-  'token', 'id_token', 'idtoken', 'jwt', 'sub', 'comp', 'storeids', 'deviceids', 'companyids',
+  'token', 'id_token', 'idtoken', 'jwt', 'sub', 'comp',
 ]);
+const ID_KEY_RE = /(device|grinder|brewer|store|company|region|user|profile|account)ids?$/i;
 const EMAIL_RE = /[^\s@]+@[^\s@]+\.[^\s@]+/;
 const JWT_RE = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]*$/;
 const SENSITIVE_HEADERS = new Set(['set-cookie', 'cookie', 'authorization']);
@@ -56,32 +48,19 @@ function redact(value, key = '') {
     return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, redact(v, k)]));
   }
   if (value === null || value === undefined || typeof value === 'boolean') return value;
-  if (REDACT_KEYS.has(key.toLowerCase())) return alias(value);
+  if (REDACT_KEYS.has(key.toLowerCase()) || ID_KEY_RE.test(key)) return alias(value);
   if (typeof value === 'string' && JWT_RE.test(value) && value.length > 40) return alias(value, 'jwt');
   if (typeof value === 'string' && EMAIL_RE.test(value)) return alias(value, 'email');
   return value;
 }
 
-function parseJwt(token) {
-  try {
-    return token.split('.').slice(0, 2)
-      .map((part) => JSON.parse(Buffer.from(part, 'base64url').toString('utf8')));
-  } catch {
-    return null;
-  }
-}
-
 function decodeJwt(token) {
   try {
-    const [header, payload] = parseJwt(token);
-    const claims = {};
-    for (const [k, v] of Object.entries(payload)) {
-      // Keep timing claims readable, alias everything else.
-      claims[k] = ['exp', 'iat', 'nbf', 'auth_time'].includes(k) ? v : redact(v, 'sub');
-    }
-    const lifetimeSeconds = typeof payload.exp === 'number' && typeof payload.iat === 'number'
-      ? payload.exp - payload.iat : null;
-    return { header, claims, lifetimeSeconds };
+    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString('utf8'));
+    return {
+      claims: Object.keys(payload),
+      lifetimeSeconds: typeof payload.exp === 'number' && typeof payload.iat === 'number' ? payload.exp - payload.iat : null,
+    };
   } catch {
     return null;
   }
@@ -97,7 +76,8 @@ function shape(value) {
   return value === null ? 'null' : typeof value;
 }
 
-// Every leaf path across all records, with types and up to 8 distinct example values.
+// Every leaf path across all records, with types, how often present, and up to 8 distinct
+// example values (already redacted records only).
 function pathSummary(records) {
   const paths = {};
   const walk = (value, path) => {
@@ -118,9 +98,7 @@ function pathSummary(records) {
 
 function interestingHeaders(headers) {
   const out = {};
-  for (const [k, v] of headers) {
-    out[k] = SENSITIVE_HEADERS.has(k) ? '<redacted>' : v;
-  }
+  for (const [k, v] of headers) out[k] = SENSITIVE_HEADERS.has(k) ? '<redacted>' : v;
   return out;
 }
 
@@ -131,34 +109,14 @@ async function request(path, body, token, method = 'POST') {
   const started = Date.now();
   let res;
   try {
-    res = await fetch(BASE_URL + path, {
-      method, headers, body: body === undefined ? undefined : JSON.stringify(body),
-    });
+    res = await fetch(BASE_URL + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
   } catch (err) {
     return { networkError: String(err?.cause ?? err), ms: Date.now() - started };
   }
   const text = await res.text();
   let json;
   try { json = JSON.parse(text); } catch { json = undefined; }
-  return {
-    status: res.status,
-    ms: Date.now() - started,
-    headers: interestingHeaders(res.headers),
-    json,
-    text: json === undefined ? text.slice(0, 500) : undefined,
-  };
-}
-
-// scope is { storeId } or { companyId }; the chart app sends whichever it has.
-function queryBody(scope, { pageSize = 1, orderBy = 'brew.cloudDate', days = 7 } = {}) {
-  return {
-    ...scope,
-    grinderId: null,
-    cloudDate: { from: new Date(Date.now() - days * 86400_000).toISOString(), to: null },
-    pager: { firstResult: 0, pageSize },
-    orderBy,
-    orderDir: 'DESC',
-  };
+  return { status: res.status, ms: Date.now() - started, headers: interestingHeaders(res.headers), json, text: json === undefined ? text.slice(0, 500) : undefined };
 }
 
 function itemsOf(json) {
@@ -166,6 +124,25 @@ function itemsOf(json) {
   if (json && Array.isArray(json.items)) return json.items;
   return null;
 }
+
+// The mobile app's query shape for grind-event/find and device-event/brew-event/find.
+function eventQuery(deviceId, days) {
+  return {
+    deviceDateRange: { from: new Date(Date.now() - days * DAY_MS).toISOString(), to: new Date(Date.now() + 5 * 60_000).toISOString() },
+    orderBy: 'deviceDate', orderDir: 'DESC', loadDevice: false,
+    deviceIds: [deviceId], storeIds2: null, storeIds: null, regionIds: null, companyIds: null,
+  };
+}
+
+function deviceUnionQuery(deviceClass) {
+  return {
+    pager: null, keyword: null, orderBy: 'change.date', orderDir: 'DESC',
+    loadStore: true, loadBindings: true, excludeTypes: ['xenia'], deviceClasses: [deviceClass],
+  };
+}
+
+const distinct = (values) => [...new Set(values.map((v) => (v === undefined ? '<missing>' : v)))];
+const countBy = (values) => values.reduce((acc, v) => ({ ...acc, [String(v)]: (acc[String(v)] ?? 0) + 1 }), {});
 
 // Plain line input instead of readline: readline redraws the whole prompt on every key,
 // which the terminal pane in the Claude app renders as a repeated prompt. Hidden input
@@ -214,10 +191,8 @@ function ask(question, { hidden = false } = {}) {
 async function main() {
   const email = process.env.MK_EMAIL || await ask('Sync e-mail: ');
   const password = process.env.MK_PASSWORD || await ask('Sync password: ', { hidden: true });
-  const storeInput = process.env.MK_STORE_ID ?? await ask('Store ID (leave empty if unknown): ');
-  let storeId = storeInput ? Number.parseInt(storeInput, 10) : null;
-  if (!email || !password || (storeInput && !Number.isInteger(storeId))) {
-    console.error('E-mail and password are required; the Store ID, if given, must be a number.');
+  if (!email || !password) {
+    console.error('E-mail and password are required.');
     process.exit(1);
   }
 
@@ -226,197 +201,127 @@ async function main() {
 
   // Q1: what a rejected login looks like (opt-in, to avoid tripping lockouts).
   if (process.argv.includes('--bad-login')) {
-    const bad = await request(AUTH_PATH, { username: email, password: `${password}-wrong` });
-    report.steps.badLogin = { status: bad.status, headers: bad.headers, body: redact(bad.json ?? bad.text) };
-    log(`wrong password → HTTP ${bad.status}`);
+    const bad = await request('/security-service/auth/token', { username: email, password: `${password}-wrong` });
+    report.steps.badLogin = { status: bad.status, body: redact(bad.json ?? bad.text) };
+    log(`wrong password → HTTP ${bad.status ?? bad.networkError}`);
   }
 
-  // Q1/Q2: login response shape and token lifetime.
-  const login = await request(AUTH_PATH, { username: email, password });
-  const tokenKey = TOKEN_KEYS.find((k) => login.json?.[k]);
-  const token = tokenKey ? login.json[tokenKey] : undefined;
+  // Login: shape and token lifetime.
+  const login = await request('/security-service/auth/token', { username: email, password });
+  const token = login.json?.access_token;
   report.steps.login = {
-    status: login.status,
-    ms: login.ms,
-    networkError: login.networkError,
-    headers: login.headers,
-    bodyShape: shape(login.json ?? login.text),
-    // Non-secret scalar fields (expires_in, token_type, …) shown as-is; secrets aliased.
-    body: redact(login.json ?? login.text),
-    tokenKey: tokenKey ?? null,
-    jwt: token ? decodeJwt(token) : null,
+    status: login.status, networkError: login.networkError,
+    bodyShape: shape(login.json ?? login.text), jwt: token ? decodeJwt(token) : null,
   };
-  log(`login → HTTP ${login.status ?? login.networkError}, token key: ${tokenKey ?? 'NOT FOUND'}`);
+  log(`login → HTTP ${login.status ?? login.networkError}${token ? '' : ' (no access_token)'}`);
   if (!token) {
     await save(report);
-    console.error('No token, stopping. The report above shows the login response shape.');
     process.exit(1);
   }
+  const companyId = login.json.details?.comp;
 
-  // Q2: the refresh endpoint (the admin dashboard calls it with the refresh token).
-  // Run last, because in the previous run the access token stopped working after it.
-  let lastAcceptedQuery = null;
-  async function runRefresh() {
-    const refreshToken = login.json.refresh_token;
-    if (!refreshToken) return;
-    if (lastAcceptedQuery) {
-      const before = await request(QUERY_PATH, lastAcceptedQuery, token);
-      log(`access token just before refresh → HTTP ${before.status ?? before.networkError}`);
-    }
-    const refresh = await request(REFRESH_PATH, undefined, refreshToken, 'GET');
-    report.steps.refresh = {
-      status: refresh.status,
-      networkError: refresh.networkError,
-      bodyShape: shape(refresh.json ?? refresh.text),
-      body: redact(refresh.json ?? refresh.text),
-      newAccessToken: refresh.json?.access_token ? refresh.json.access_token !== token : null,
-      newRefreshToken: refresh.json?.refresh_token ? refresh.json.refresh_token !== refreshToken : null,
-    };
-    log(`refresh → HTTP ${refresh.status ?? refresh.networkError}`);
-    if (lastAcceptedQuery && refresh.json?.access_token) {
-      const old = await request(QUERY_PATH, lastAcceptedQuery, token);
-      const fresh = await request(QUERY_PATH, lastAcceptedQuery, refresh.json.access_token);
-      report.steps.refresh.oldTokenAfterRefresh = old.status;
-      report.steps.refresh.newTokenAfterRefresh = fresh.status;
-      log(`after refresh: old token → HTTP ${old.status}, refreshed token → HTTP ${fresh.status}`);
-    }
+  // The account.
+  const profile = await request('/mobile-service/profile/my-profile', undefined, token, 'GET');
+  report.steps.profile = { status: profile.status, companyType: profile.json?.company?.type ?? null, shape: shape(profile.json) };
+
+  // Devices: the mobile list per class (Q9: does GRINDER work for pairing?) and the admin list
+  // the app uses for pairing today.
+  const devices = {};
+  for (const deviceClass of ['GRINDER', 'SCALE']) {
+    const res = await request('/mobile-service/device-union/query', deviceUnionQuery(deviceClass), token);
+    const items = itemsOf(res.json) ?? [];
+    devices[deviceClass] = items;
+    report.steps[`deviceUnion${deviceClass}`] = { status: res.status, count: items.length, records: redact(items) };
+    log(`device-union ${deviceClass} → HTTP ${res.status ?? res.networkError}, ${items.length} devices`);
+  }
+  const admin = await request('/admin-service/device/query', { companyId, loadStatus: true, loadBindings: true, pager: { firstResult: 0, pageSize: 50 } }, token);
+  const adminItems = itemsOf(admin.json) ?? [];
+  report.steps.adminDevices = { status: admin.status, count: adminItems.length, types: adminItems.map((d) => d.type) };
+  log(`admin device/query → HTTP ${admin.status ?? admin.networkError}, ${adminItems.length} devices`);
+
+  const grinderIds = distinct([...devices.GRINDER, ...adminItems.filter((d) => d.type !== 'scale')].map((d) => d.deviceId)).filter((id) => id !== '<missing>');
+  const scaleIds = distinct(devices.SCALE.map((d) => d.deviceId)).filter((id) => id !== '<missing>');
+
+  // Per grinder: the status block and 7 days of grinds (Q6 value sets, unweighed grinds, purges).
+  report.steps.grinders = [];
+  for (const grinderId of grinderIds) {
+    const status = await request(`/mobile-service/device/?key=${encodeURIComponent(grinderId)}`, undefined, token, 'GET');
+    const grinds = await request('/mobile-service/grind-event/find', eventQuery(grinderId, 7), token);
+    const events = itemsOf(grinds.json) ?? [];
+    const payloads = events.map((e) => e.payload ?? {});
+    const weights = payloads.map((p) => p.weightActual);
+    report.steps.grinders.push({
+      grinder: alias(grinderId),
+      status: { http: status.status, record: redact(status.json?.status ?? null) },
+      grinds: {
+        http: grinds.status,
+        count7d: events.length,
+        count24h: events.filter((e) => Date.now() - Date.parse(e.deviceDate) <= DAY_MS).length,
+        unweighed: weights.filter((w) => w === 0).length,
+        purgesBelow5g: weights.filter((w) => typeof w === 'number' && w > 0 && w < PURGE_BELOW_G * 1000).length,
+        triggerMode: countBy(payloads.map((p) => p.triggerMode)),
+        recipeMode: countBy(payloads.map((p) => p.recipeMode)),
+        recipeType: countBy(payloads.map((p) => p.recipeType)),
+        filterType: countBy(payloads.map((p) => p.filterType)),
+        successful: countBy(payloads.map((p) => p.successful)),
+        paths: pathSummary(events.map((e) => redact(e))),
+      },
+    });
+    log(`grinder ${alias(grinderId)}: ${events.length} grinds in 7 days (${weights.filter((w) => w === 0).length} unweighed), `
+      + `triggerMode ${JSON.stringify(countBy(payloads.map((p) => p.triggerMode)))}`);
   }
 
-  // Q8: the company id, and the stores it manages.
-  const companyId = login.json.details?.comp;
-  report.steps.companyId = { present: companyId != null, type: typeof companyId };
-  let devicesRaw = [];
-  if (companyId != null) {
-    const stores = await request(STORES_PATH, {
-      companyId, orderBy: 'info.name', orderDir: 'ASC', loadRegion: true,
-      pager: { firstResult: 0, pageSize: 20 },
-    }, token);
-    const storeItems = itemsOf(stores.json);
-    report.steps.stores = {
-      status: stores.status,
-      networkError: stores.networkError,
-      envelope: stores.json && !Array.isArray(stores.json) ? Object.keys(stores.json) : null,
-      count: storeItems?.length ?? null,
-      records: storeItems ? redact(storeItems) : redact(stores.json ?? stores.text),
-    };
-    log(`stores for company → HTTP ${stores.status ?? stores.networkError}, ${storeItems?.length ?? 'no'} items`);
-    if (storeItems?.length) {
-      console.log('• stores (shown here only, not in the report):');
-      for (const st of storeItems) console.log(`    storeId ${st.storeId}: ${st.info?.name ?? '?'}`);
-      if (storeId === null && storeItems.length === 1 && Number.isInteger(storeItems[0].storeId)) {
-        storeId = storeItems[0].storeId;
-        log('using the only store for the store-based queries');
+  // Per scale: 7 days of shots, every field (where does the official app's brew time target come from?).
+  report.steps.scales = [];
+  for (const scaleId of scaleIds) {
+    const brews = await request('/mobile-service/device-event/brew-event/find', eventQuery(scaleId, 7), token);
+    const events = itemsOf(brews.json) ?? [];
+    report.steps.scales.push({
+      scale: alias(scaleId),
+      http: brews.status,
+      count7d: events.length,
+      stopType: countBy(events.map((e) => e.payload?.stopType)),
+      paths: pathSummary(events.map((e) => redact(e))),
+      newest: redact(events[0] ?? null),
+    });
+    log(`scale ${alias(scaleId)}: ${events.length} shots in 7 days`);
+  }
+
+  // Recipes and the on-target bands (for the brew time deviation and the colour rule).
+  const recipes = await request('/mobile-service/cloud-recipe/query', { pager: null, status: ['PUBLISHED'], orderBy: 'change.date', orderDir: 'DESC' }, token);
+  report.steps.recipes = { status: recipes.status, paths: pathSummary((itemsOf(recipes.json) ?? []).map((r) => redact(r))) };
+  const thresholds = await request('/mobile-service/recipe-threshold/?key', undefined, token, 'GET');
+  report.steps.recipeThreshold = { status: thresholds.status, body: thresholds.json ?? thresholds.text };
+  const lastEvents = await request('/mobile-service/stats/event/last-events', { limitToCurrentDevice: true }, token);
+  report.steps.lastEvents = { status: lastEvents.status, shape: shape(lastEvents.json) };
+
+  // The app's own client, end to end, against the live cloud.
+  const client = new SyncClient({ email, password });
+  const clientRun = {};
+  try {
+    await client.login();
+    const grinders = await client.listGrinders();
+    const scales = await client.listScales();
+    clientRun.grinders = grinders.length;
+    clientRun.scales = scales.length;
+    if (grinders[0]) {
+      const now = Date.now();
+      clientRun.grinds24h = (await client.findGrindEvents(grinders[0].deviceId, new Date(now - DAY_MS), new Date(now + 5 * 60_000))).length;
+      clientRun.statusKeys = Object.keys((await client.getDevice(grinders[0].deviceId)).status?.status ?? {});
+      const binding = await client.getScaleBinding(grinders[0].deviceId);
+      clientRun.pairedScale = binding !== null;
+      if (binding?.brewerId != null) {
+        clientRun.shots24h = (await client.findBrewEvents(binding.brewerId, new Date(now - DAY_MS), new Date(now + 5 * 60_000))).length;
       }
     }
-
-    // Q9: the grinders (and scales) registered to the company.
-    const devices = await request(DEVICES_PATH, {
-      companyId, loadStore: true, loadStatus: true, loadBindings: true,
-      pager: { firstResult: 0, pageSize: 20 },
-    }, token);
-    devicesRaw = itemsOf(devices.json) ?? [];
-    report.steps.devices = {
-      status: devices.status,
-      networkError: devices.networkError,
-      envelope: devices.json && !Array.isArray(devices.json) ? Object.keys(devices.json) : null,
-      count: itemsOf(devices.json)?.length ?? null,
-      records: itemsOf(devices.json) ? redact(devicesRaw) : redact(devices.json ?? devices.text),
-    };
-    log(`devices for company → HTTP ${devices.status ?? devices.networkError}, ${devicesRaw.length} items`);
+    clientRun.ok = true;
+  } catch (error) {
+    clientRun.ok = false;
+    clientRun.error = `${error?.name}: ${error?.message}`;
   }
+  report.steps.syncClient = clientRun;
+  log(`app SyncClient → ${clientRun.ok ? 'ok' : `failed (${clientRun.error})`}: ${JSON.stringify(clientRun)}`);
 
-  if (storeId === null && companyId == null) {
-    await save(report);
-    console.log('No store id and no company id, so the shot-history queries were skipped.');
-    return;
-  }
-
-  // Q8/Q9: which scope does the shot-history query accept for this account? A home account
-  // can have no store (its grinder hangs off the company), and the company alone gave 403.
-  const grinderId = devicesRaw.find((d) => d?.type && d.type !== 'scale')?.deviceId ?? null;
-  const variants = [
-    ...(storeId !== null ? [['store', { storeId }, null]] : []),
-    ['company', { companyId }, null],
-    ...(grinderId != null ? [
-      ['companyAndGrinder', { companyId }, grinderId],
-      ['grinderOnly', {}, grinderId],
-      ['companyAndGrinderAsString', { companyId }, String(grinderId)],
-    ] : []),
-    ['companyAsString', { companyId: String(companyId) }, null],
-  ];
-  report.steps.scopeVariants = {};
-  let accepted = null;
-  for (const [name, scope, gid] of variants) {
-    const body = { ...queryBody(scope), grinderId: gid };
-    const res = await request(QUERY_PATH, body, token);
-    const items = itemsOf(res.json);
-    report.steps.scopeVariants[name] = {
-      request: redact(body),
-      status: res.status,
-      count: items?.length ?? null,
-      body: items ? undefined : redact(res.json ?? res.text),
-    };
-    log(`shot-history with ${name} → HTTP ${res.status ?? res.networkError}${items ? `, ${items.length} items` : ''}`);
-    if (!accepted && res.status === 200) {
-      accepted = { name, scope, gid };
-      lastAcceptedQuery = body;
-    }
-  }
-  if (!accepted) {
-    await runRefresh();
-    await save(report);
-    console.log('No scope was accepted by the shot-history query, so the detail queries were skipped.');
-    return;
-  }
-  log(`using "${accepted.name}" for the detail queries`);
-  const qb = (opts) => ({ ...queryBody(accepted.scope, opts), grinderId: accepted.gid });
-
-  const queries = [
-    // Q4/Q11/Q12: recent records, to see grinds without a brew and how they sort.
-    ['byBrew20', qb({ pageSize: 20 })],
-    // Q4: is sorting on the grind accepted, and does it return grinds the brew sort hides?
-    ['byGrind20', qb({ pageSize: 20, orderBy: 'grind.cloudDate' })],
-    // Q10: is a large page accepted?
-    ['byBrew200', qb({ pageSize: 200, days: 30 })],
-  ];
-
-  for (const [name, body] of queries) {
-    const res = await request(QUERY_PATH, body, token);
-    const items = itemsOf(res.json);
-    report.steps[name] = {
-      request: redact(body),
-      status: res.status,
-      ms: res.ms,
-      networkError: res.networkError,
-      headers: res.headers,
-      envelope: Array.isArray(res.json) ? 'array' : res.json && typeof res.json === 'object'
-        ? { keys: Object.keys(res.json), nonItems: redact(Object.fromEntries(
-          Object.entries(res.json).filter(([k]) => k !== 'items'))) }
-        : res.text,
-      count: items?.length ?? null,
-    };
-    log(`${name} → HTTP ${res.status ?? res.networkError}, ${items?.length ?? 'no'} items`);
-    if (!items) continue;
-
-    report.steps[name].timeline = items.map((r) => ({
-      grindAt: r?.grind?.cloudDate ?? null,
-      brewAt: r?.brew?.cloudDate ?? null,
-      hasGrind: r?.grind != null,
-      hasBrew: r?.brew != null,
-      grindSeconds: typeof r?.grind?.payload?.durationActual === 'number' ? r.grind.payload.durationActual / 1000 : null,
-      doseGrams: typeof r?.grind?.payload?.weightActual === 'number' ? r.grind.payload.weightActual / 1000 : null,
-      grindEventUuid: r?.grind?.eventUuid ? alias(r.grind.eventUuid, 'uuid') : null,
-      grinder: r?.grind?.deviceId != null ? alias(r.grind.deviceId) : null,
-    }));
-    if (name === 'byBrew20' || name === 'byGrind20') {
-      report.steps[name].records = redact(items.slice(0, 5));
-    }
-    if (name === 'byBrew200') {
-      report.steps[name].paths = pathSummary(items.map((r) => redact(r)));
-    }
-  }
-
-  await runRefresh();
   await save(report);
 }
 

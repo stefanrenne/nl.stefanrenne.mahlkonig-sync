@@ -47,7 +47,7 @@ These were the maintainer's calls. Don't file them as bugs or reopen them withou
   `discHealth` are undocumented and their meaning couldn't be verified (`discHealth` was 0 on a
   nearly new grinder). Show them again only once their meaning is known.
 - **The Espresso widget looks like the official app's history**: a timeline of the latest 1/3/5/10
-  grinds and shots (no timeline rail for 1), each shot matched with the newest grind up to 15 minutes before it, with
+  grinds and shots (no timeline rail for 1), each shot joined to the grind the cloud links it to, with
   device cards, a link badge and the brew ratio. Earlier versions (sections for last/today/status,
   then a plain 24-hour list) were replaced at the maintainer's request (2026-10-02, 2026-10-07).
   The widget never calls the cloud.
@@ -61,5 +61,11 @@ These were the maintainer's calls. Don't file them as bugs or reopen them withou
   renames them in Homey (2026-10-07).
 - **The Sync Scale's labels are refreshed every 10 minutes**, so re-pairing a scale to another
   grinder shows up without re-adding the device (2026-10-07).
+- **Shots are joined to grinds only by the cloud's `payload.grindEventUuid`**, never by time
+  (2026-10-07, after the probe showed the link). A shot without a link is a shot on its own, also
+  for the grinder's "Shot completed" dose and ratio.
+- **Deviations like the official app**: grind weight = actual − target, brew time = target −
+  actual (the app's sign); colour from the cloud's `shotQuality` (PERFECT green, OK orange, else
+  red) or the ±5/±10 % bands (2026-10-07).
 - **`.mts` instead of `.ts`.** The brief named `lib/SyncClient.ts`; the file is
   `lib/SyncClient.mts` to match the maintainer's other apps (TypeScript as ES modules).

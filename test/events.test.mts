@@ -2,7 +2,6 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
   brewRatio,
-  doseForBrew,
   emptyTrackerState,
   ingestBrews,
   ingestGrinds,
@@ -10,7 +9,7 @@ import {
   parseBrew,
   startedByPortafilter,
   parseGrind,
-  realGrindBefore,
+  linkedGrind,
   rememberBrews,
   type Brew,
   type Grind,
@@ -41,9 +40,9 @@ function grind(at: string, doseG: number | null = 18): Grind {
   }
 }
 
-function brew(at: string, yieldG = 36): Brew {
+function brew(at: string, yieldG = 36, grindUuid: string | null = null): Brew {
   counter += 1
-  return { uuid: `brew-${counter}`, at: new Date(at).toISOString(), yieldG, shotTimeS: 27.5 }
+  return { uuid: `brew-${counter}`, at: new Date(at).toISOString(), yieldG, shotTimeS: 27.5, grindUuid, quality: null }
 }
 
 describe('parseGrind', () => {
@@ -93,12 +92,27 @@ describe('parseGrind', () => {
 })
 
 describe('parseBrew', () => {
-  it('converts the scale\'s mass and duration', () => {
+  it('converts the scale\'s mass and duration; a shot without a grind has no link or quality', () => {
     expect(parseBrew(fixture('last-events.json').lastBrew)).toEqual({
       uuid: '00000000-0000-4000-8000-000000000003',
       at: '2026-09-29T07:00:01.881Z',
       yieldG: 1,
       shotTimeS: 4,
+      grindUuid: null,
+      quality: null,
+    })
+  })
+
+  it('reads the grind link and the cloud\'s quality verdict of a shot with a grind', () => {
+    const [, linked] = fixture('brew-events.json')
+
+    expect(parseBrew(linked)).toEqual({
+      uuid: '00000000-0000-4000-8000-000000000012',
+      at: '2026-10-02T07:01:10.736Z',
+      yieldG: 42.5,
+      shotTimeS: 28,
+      grindUuid: '00000000-0000-4000-8000-000000000002',
+      quality: { brewTime: 'OK', grindWeight: 'PERFECT' },
     })
   })
 })
@@ -135,14 +149,7 @@ describe('brew ratio and dose pairing', () => {
     expect(brewRatio(36, 0)).toBeNull()
   })
 
-  it('takes the dose of a grind up to 15 minutes before the shot', () => {
-    const before = grind('2026-10-02T07:00:00Z', 18.1)
-    expect(doseForBrew(brew('2026-10-02T07:01:00Z'), before)).toBe(18.1)
-    expect(doseForBrew(brew('2026-10-02T07:15:00Z'), before)).toBe(18.1)
-    expect(doseForBrew(brew('2026-10-02T07:16:00Z'), before)).toBeNull()
-    expect(doseForBrew(brew('2026-10-02T06:59:00Z'), before)).toBeNull()
-    expect(doseForBrew(brew('2026-10-02T07:01:00Z'), null)).toBeNull()
-  })
+
 })
 
 describe('ingestGrinds (new grind detection)', () => {
@@ -277,15 +284,15 @@ describe('recent events for the widget', () => {
   })
 })
 
-describe('realGrindBefore', () => {
-  it('picks the newest real grind at or before the shot', () => {
-    const early = grind('2026-10-02T07:00:00Z', 18)
-    const late = grind('2026-10-02T07:05:00Z', 18.5)
-    const purgeAfter = grind('2026-10-02T07:06:00Z', 1)
-    const afterShot = grind('2026-10-02T07:20:00Z', 19)
-    const shotAt = brew('2026-10-02T07:10:00Z')
+describe('linkedGrind', () => {
+  it('finds the grind the cloud links the shot to, never one by time', () => {
+    const linked = grind('2026-10-02T07:00:00Z', 18)
+    const closer = grind('2026-10-02T07:09:00Z', 18.5)
+    const shotAt = brew('2026-10-02T07:10:00Z', 36, linked.uuid)
 
-    expect(realGrindBefore(shotAt, [early, null, afterShot, purgeAfter, late], 5)).toBe(late)
-    expect(realGrindBefore(shotAt, [purgeAfter, afterShot], 5)).toBeNull()
+    expect(linkedGrind(shotAt, [closer, null, linked])).toBe(linked)
+    // Without a link, or with a grind that isn't in the lists: no grind, even right after one.
+    expect(linkedGrind(brew('2026-10-02T07:10:00Z'), [closer])).toBeNull()
+    expect(linkedGrind(shotAt, [closer])).toBeNull()
   })
 })

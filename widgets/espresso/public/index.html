@@ -8,6 +8,7 @@
         --card: rgba(127, 127, 127, 0.12);
         --rail: rgba(127, 127, 127, 0.45);
         --good: var(--homey-color-green, #3fb950);
+        --ok: var(--homey-color-orange, #d29922);
         --bad: var(--homey-color-red, #e5534b);
       }
 
@@ -78,6 +79,9 @@
       }
       .deviation.good {
         color: var(--good);
+      }
+      .deviation.ok {
+        color: var(--ok);
       }
       .deviation.bad {
         color: var(--bad);
@@ -182,12 +186,12 @@
           return cell;
         }
 
-        // Green within 5 % of the target, red outside it (the recipe threshold bands are ±5/±10 %).
-        function deviationOf(grind) {
-          if (grind.deviationG === null || grind.targetG === null || !grind.targetG) return null;
-          const sign = grind.deviationG > 0 ? '+' : '';
-          const good = Math.abs(grind.deviationG) <= grind.targetG * 0.05;
-          return { text: `${sign}${number(grind.deviationG, 1)} g`, className: good ? 'good' : 'bad' };
+        // The deviation as the official app shows it, coloured by its quality (computed in
+        // lib/summary.mts: the cloud's verdict, else the ±5/±10 % bands).
+        function deviationOf(value, unit, quality) {
+          if (value === null || value === undefined) return null;
+          const sign = value > 0 ? '+' : '';
+          return { text: `${sign}${number(value, 1)} ${unit}`, className: quality || '' };
         }
 
         function card(title, fields) {
@@ -200,7 +204,7 @@
 
         function grindCard(grind) {
           return card(Homey.__('widget.grinder'), [
-            field(Homey.__('widget.grindWeight'), amount(grind.weightG, 1, 'g'), deviationOf(grind)),
+            field(Homey.__('widget.grindWeight'), amount(grind.weightG, 1, 'g'), deviationOf(grind.deviationG, 'g', grind.quality)),
             field(Homey.__('widget.discDistance'), amount(grind.discDistance, 0, 'µm')),
           ]);
         }
@@ -208,7 +212,7 @@
         function brewCard(brew) {
           return card(Homey.__('widget.scale'), [
             field(Homey.__('widget.brewWeight'), amount(brew.weightG, 1, 'g')),
-            field(Homey.__('widget.brewTime'), amount(brew.timeS, 1, 's')),
+            field(Homey.__('widget.brewTime'), amount(brew.timeS, 1, 's'), deviationOf(brew.deviationS, 's', brew.quality)),
           ]);
         }
 

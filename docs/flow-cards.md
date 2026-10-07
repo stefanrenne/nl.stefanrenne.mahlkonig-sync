@@ -10,7 +10,7 @@ next to the grinder's `shot_completed`.
 | Id | Tokens | Fires |
 |---|---|---|
 | `grind_completed` (E64 WS) | `dose` (number, g), `grind_setting` (number), `grind_time` (number, s), `portafilter_detected` (boolean: `payload.triggerMode` is `PortafilterDetection`), `is_purge` (boolean) | Once per new grind event, **purges included**, oldest first. Not on the baseline poll, and not for grinds more than 60 minutes old when first seen. |
-| `shot_completed` (E64 WS) | `yield` (number, g), `shot_time` (number, s), `dose` (number, g), `ratio` (number) | Once per new shot of the scale paired with the grinder, same rules. `dose` and `ratio` use the last real grind at most 15 minutes before the shot; both are `0` when there is none. |
+| `shot_completed` (E64 WS) | `yield` (number, g), `shot_time` (number, s), `dose` (number, g), `ratio` (number) | Once per new shot of the scale paired with the grinder, same rules. `dose` and `ratio` come from the grind the cloud links to the shot (`payload.grindEventUuid`); both are `0` when there is none. |
 | `scale_shot_completed` (Sync Scale) | `yield` (number, g), `shot_time` (number, s) | Once per new shot of that scale, same rules. No dose or ratio. With both devices added, a shot fires both cards. |
 
 Unknown numbers are sent as `0`, because Homey tokens can't be null. `portafilter_detected` is

@@ -26,17 +26,22 @@ stored during its polls.
 ## Matching (`buildTimeline`)
 
 - All stored grinds and shots (`recentGrinds` / `recentBrews` plus the last ones), unique by id.
-- Shots are matched oldest first: each takes the **newest grind at most 15 minutes before it**
-  (`MAX_GRIND_TO_SHOT_MS`) that no other shot took. A grind after the shot never matches.
+- A shot is joined to the grind the cloud links it to (`payload.grindEventUuid`, via
+  `linkedGrind`). Never by time: a shot without a link, or whose grind isn't stored, is listed on
+  its own.
 - Every grind becomes an entry (with its shot if matched); every unmatched shot becomes an entry
   of its own. Entries are sorted newest first and cut to `count`; a matched entry has the grind's
   time.
-- Per grind: `deviationG` = weight − recipe target (null without a target). Per matched pair:
-  `ratio` = brew weight ÷ grind weight, one decimal, null when the grind weighed 0 g.
+- Per grind: `deviationG` = weight − recipe target (null without a target or weight). Per joined
+  shot: `deviationS` = the grind's `brewTimeRecipe` − brew time (the official app's sign: −3.0 s for
+  28.0 s against 25 s), and `ratio` = brew weight ÷ grind weight, one decimal (null when unknown).
+- `quality` (`good` / `ok` / `bad`) colours each deviation green / orange / red: the cloud's
+  `shotQuality` (`PERFECT` / `OK` / other) when the shot has one, else the ±5 / ±10 % bands of
+  `recipe-threshold` (`qualityOf`).
 
 | Entry | Shows |
 |---|---|
-| Grind + shot | An "E64 WS" card (grind weight with its deviation, disc distance in µm) and a "Sync Scale" card (brew weight, brew time) joined by a link badge, then "Brew ratio 1:x" ("1: -" when unknown) |
+| Grind + shot | An "E64 WS" card (grind weight with its deviation, disc distance in µm) and a "Sync Scale" card (brew weight, brew time with its deviation) joined by a link badge, then "Brew ratio 1:x" ("1: -" when unknown) |
 | Grind only (purges too) | The "E64 WS" card |
 | Shot only | The "Sync Scale" card |
 
@@ -62,15 +67,12 @@ device's local time; entries from yesterday get the weekday in front.
 - **Layout**: no padding of its own (the `homey-widget` body class has it). A vertical rail with a
   dot and the time per entry; translucent cards (`rgba(127,127,127,.12)`, readable in light and
   dark); the link badge is a constant inline SVG (the only `innerHTML`, never data). Deviation
-  colour: green within 5 % of the target, red outside (assumed from the recipe threshold bands
-  ±5/±10 %; the official app's exact rule is unknown).
+  colours: `--homey-color-green` / `-orange` / `-red` with fallbacks.
 
 ## Known issues
 
-- No deviation on the brew time: the official app shows one (e.g. −3.0 s at 28.0 s), but its target
-  doesn't match the recipe's `brewTimeRecipe` (25 s would give +3.0 s). See TODO.md.
 
-- Matching is by time only (the cloud gives no link between a grind and a shot). Two grinds and
-  two shots close together can be paired differently from the official app.
+- The official app showed the 2026-10-02 13:31 shot's −3.0 s in red, where the cloud's verdict was
+  `OK` (orange here). Its exact colour rule is unknown.
 - Shots only appear when the grinder has a paired Sync Scale (the grinder device reads its scale's
   shots); the separate Sync Scale device isn't used by the widget.

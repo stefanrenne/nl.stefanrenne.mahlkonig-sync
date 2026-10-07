@@ -1,0 +1,40 @@
+[
+  {
+    "eventUuid": "00000000-0000-4000-8000-000000000011",
+    "name": "Event",
+    "deviceId": "SCALE-1",
+    "companyId": "COMPANY-1",
+    "cloudDate": "2026-10-02T12:40:14.288392Z",
+    "deviceDate": "2026-10-02T12:40:14.288392Z",
+    "payload": {
+      "duration": 454500,
+      "mass": 1100,
+      "stopType": "AutoTimerFlow",
+      "brewer": "scale"
+    },
+    "device": null
+  },
+  {
+    "eventUuid": "00000000-0000-4000-8000-000000000012",
+    "name": "Event",
+    "deviceId": "SCALE-1",
+    "companyId": "COMPANY-1",
+    "cloudDate": "2026-10-02T07:01:10.736325Z",
+    "deviceDate": "2026-10-02T07:01:10.736325Z",
+    "localDate": "2026-10-02T09:01:10.736325",
+    "payload": {
+      "duration": 28000,
+      "mass": 42500,
+      "stopType": "AutoTimerFlow",
+      "brewer": "scale",
+      "grindEventUuid": "00000000-0000-4000-8000-000000000002",
+      "grinderId": "GRINDER-1"
+    },
+    "shotQuality": {
+      "overall": "OK",
+      "brewTime": "OK",
+      "grindWeight": "PERFECT"
+    },
+    "device": null
+  }
+]

@@ -68,9 +68,15 @@ function grindEvent(uuid: string, minutesAgo: number, weightMg: number, triggerM
   }
 }
 
-function brewEvent(uuid: string, minutesAgo: number, massMg = 40_000, durationMs = 27_500): RawBrewEvent {
+/** A shot shaped like the cloud's; `grindUuid` is the grind the cloud links it to. */
+function brewEvent(uuid: string, minutesAgo: number, massMg = 40_000, durationMs = 27_500, grindUuid?: string): RawBrewEvent {
   const at = new Date(Date.now() - minutesAgo * MINUTE).toISOString()
-  return { eventUuid: uuid, deviceDate: at, cloudDate: at, payload: { mass: massMg, duration: durationMs, stopType: 'AutoTimerFlow' } }
+  return {
+    eventUuid: uuid,
+    deviceDate: at,
+    cloudDate: at,
+    payload: { mass: massMg, duration: durationMs, stopType: 'AutoTimerFlow', ...(grindUuid ? { grindEventUuid: grindUuid } : {}) },
+  }
 }
 
 const lastDelay = () => homey.setTimeout.mock.calls.at(-1)?.[1]
@@ -279,30 +285,33 @@ describe('Grind completed', () => {
 })
 
 describe('Shot completed', () => {
-  it('fires with yield, shot time and the dose and ratio of the grind before it', async () => {
+  it('fires with yield, shot time and the dose and ratio of the grind the cloud links it to', async () => {
     const device = createDevice()
     await device.onInit()
     client.findBrewEvents.mockResolvedValueOnce([brewEvent('earlier-shot', 300)])
     await device.poll()
 
-    client.findGrindEvents.mockResolvedValueOnce([grindEvent('grind', 3, 18_000)])
-    client.findBrewEvents.mockResolvedValueOnce([brewEvent('shot', 1, 36_400, 27_500)])
+    // The linked grind is the older one; the newer grind right before the shot is not its grind.
+    client.findGrindEvents.mockResolvedValueOnce([grindEvent('linked', 10, 18_000), grindEvent('other', 2, 20_000)])
+    client.findBrewEvents.mockResolvedValueOnce([brewEvent('shot', 1, 36_400, 27_500, 'linked')])
     await device.poll()
 
     expect(card('shot_completed').tokens()).toEqual([{ yield: 36.4, shot_time: 27.5, dose: 18, ratio: 2.02 }])
     expect(Object.fromEntries(device.capabilityValues)).toMatchObject({ yield_weight: 36.4, shot_time: 27.5, brew_ratio: 2.02 })
   })
 
-  it('ignores purges and reports dose and ratio 0 without a grind shortly before', async () => {
+  it('reports dose and ratio 0 for a shot the cloud links to no grind, even right after one', async () => {
     const device = createDevice()
     await device.onInit()
     await device.poll()
 
-    client.findGrindEvents.mockResolvedValueOnce([grindEvent('purge', 2, 1_000, 'StartButton')])
+    client.findGrindEvents.mockResolvedValueOnce([grindEvent('grind', 2, 18_000)])
     client.findBrewEvents.mockResolvedValueOnce([brewEvent('shot', 1)])
     await device.poll()
 
     expect(card('shot_completed').tokens()).toEqual([{ yield: 40, shot_time: 27.5, dose: 0, ratio: 0 }])
+    // Never set, or cleared: either way the device shows no ratio.
+    expect(device.capabilityValues.get('brew_ratio') ?? null).toBeNull()
   })
 
   it('doesn\'t fire for the shots that were there on the first poll', async () => {
@@ -461,21 +470,27 @@ describe('Espresso widget', () => {
     expect(device.available).toBe(true)
   })
 
-  it('lists the stored grinds and shots, newest first, shots matched with their grinds', async () => {
+  it('lists the stored grinds and shots, newest first, each shot joined to its linked grind', async () => {
     const device = createDevice()
     await device.onInit()
     client.findGrindEvents.mockResolvedValueOnce([grindEvent('purge', 20, 1_500, 'StartButton'), grindEvent('real', 25, 18_000)])
-    client.findBrewEvents.mockResolvedValueOnce([brewEvent('shot', 18, 36_000)])
+    client.findBrewEvents.mockResolvedValueOnce([brewEvent('shot', 18, 36_000, 27_500, 'real')])
     await device.poll()
 
     expect(device.widgetTimeline(5)).toEqual([
       {
         at: expect.any(String),
-        grind: { weightG: 1.5, targetG: 20, deviationG: -18.5, discDistance: 139 },
-        brew: { weightG: 36, timeS: 27.5 },
-        ratio: 24,
+        grind: { weightG: 1.5, targetG: 20, deviationG: -18.5, quality: 'bad', discDistance: 139 },
+        brew: null,
+        ratio: null,
       },
-      { at: expect.any(String), grind: { weightG: 18, targetG: 20, deviationG: -2, discDistance: 139 }, brew: null, ratio: null },
+      {
+        at: expect.any(String),
+        // 2 g under a 20 g target is 10 %: the outer band.
+        grind: { weightG: 18, targetG: 20, deviationG: -2, quality: 'ok', discDistance: 139 },
+        brew: { weightG: 36, timeS: 27.5, targetS: 25, deviationS: -2.5, quality: 'ok' },
+        ratio: 2,
+      },
     ])
     expect(device.widgetTimeline(1)).toHaveLength(1)
   })

@@ -23,7 +23,9 @@ Four sources:
    chart dashboard (`chart.sync.mahlkoenig.com`, a Flutter app, `main.dart.js`).
    `https://sync.mahlkoenig.com/app/` redirects to the admin dashboard.
 3. `scripts/probe.mjs` run against the live API with the maintainer's account (a home
-   account: E64 WS plus Sync Scale) on 2026-10-01 and 2026-10-02. The reports are in the
+   account: E64 WS plus Sync Scale) on 2026-10-01 and 2026-10-02 (then still the web-dashboard
+   probe). Since 2026-10-07 the script probes the mobile API and runs the app's `SyncClient`; run
+   `node scripts/probe.mjs [--bad-login]` to check the open questions below. The reports are in the
    gitignored `probe-output/`.
 4. The official Sync iOS app's traffic, captured by the maintainer with mitmproxy in WireGuard
    mode on 2026-10-02 and redacted with `scripts/capture.py`. The app is Flutter
@@ -227,22 +229,34 @@ From `grind-event/find` and `last-events.lastGrind`:
 
 ### Brew event (Sync Scale)
 
-From `last-events.lastBrew` (no brew happened on the capture day):
+From `device-event/brew-event/find` (Live, probe 2026-10-07: 9 shots in 7 days):
 
 ```json
 {
-  "eventUuid": "00000000-…", "name": "…",
+  "eventUuid": "…", "name": "…",
   "deviceId": "<scale>", "companyId": "<company>",
-  "cloudDate": "2026-09-29T07:00:01.881658Z", "deviceDate": "2026-09-29T07:00:01.881658Z",
-  "payload": { "duration": 4000, "mass": 1000, "stopType": "AutoTimerFlow", "brewer": "scale" },
-  "device": { "brewerId": "<scale>", "serial": "…", "type": "scale", "…": "…" }
+  "cloudDate": "2026-10-02T12:40:14.288392Z", "deviceDate": "2026-10-02T12:40:14.288392Z",
+  "localDate": "2026-10-02T14:40:14.288392",
+  "payload": {
+    "duration": 28000, "mass": 42500, "stopType": "AutoTimerFlow", "brewer": "scale",
+    "grindEventUuid": "<eventUuid of the grind>", "grinderId": "<grinder>"
+  },
+  "shotQuality": { "overall": "OK", "brewTime": "OK", "grindWeight": "PERFECT" },
+  "device": null
 }
 ```
 
-- `mass` in mg, `duration` in ms (as in the HA mapping). No `shotQuality` in this sample, and no
-  link to a grind event: pairing a brew with its grind (for the ratio) is up to the app,
-  presumably by time (Q12).
-- `stopType` values other than `"AutoTimerFlow"` are **open**.
+- `mass` in mg, `duration` in ms (as in the HA mapping).
+- **`payload.grindEventUuid` links the shot to its grind** (and `payload.grinderId` to the
+  grinder): this is how the official app joins a grind and a shot. Present on the shots that had a
+  grind before them (7 of 9); missing on scale-only shots (Q12).
+- `shotQuality` (on matched shots): `overall`, `brewTime`, `grindWeight`; values seen `"PERFECT"`
+  and `"OK"`. Presumably from the recipe threshold bands (`recipe-threshold`: ±5 / ±10 %).
+- For the scale `deviceDate` equals `cloudDate` (no own clock); `localDate` is local time.
+- `stopType`: only `"AutoTimerFlow"` seen (9 of 9). The older `last-events.lastBrew` sample had
+  no `grindEventUuid` or `shotQuality`.
+- The official app shows the brew time deviation as **target − actual** (−3.0 s for a 28.0 s shot
+  with `brewTimeRecipe` 25 s), the opposite sign of the grind weight deviation (actual − target).
 
 ### How the app polls
 
@@ -476,8 +490,8 @@ Grind values come from `POST grind-event/find`, shot values from `POST device-ev
 Status after the mobile-app capture (2026-10-02). Resolved questions keep their number so
 references stay valid.
 
-- **Q1 Login response.** ✅ Token key is `access_token` (Live). Minor open point: what a wrong
-  password returns (probe `--bad-login`).
+- **Q1 Login response.** ✅ Token key is `access_token`; a wrong password gives **401 with an empty
+  body** (Live, probe 2026-10-07).
 - **Q2 Token lifetime and refresh.** ✅ 600 s access tokens, ms `expires_in`, non-rotating
   refresh token, `GET auth/refresh` (Live, App). The app refreshes in normal use (App).
 - **Q3 Response envelope.** ✅ Varies per endpoint: bare arrays (`*-event/find`),
@@ -485,17 +499,23 @@ references stay valid.
 - **Q4 Grinds without a brew.** ✅ Every grind is its own event, purges included (App).
 - **Q5 Grind setting.** ✅ `dddActual` is the **disc distance in µm**: the official app shows it as
   "Disc distance 139 µm" (App, 2026-10-02 history screen). The recipe calls it `coarseness`.
-- **Q6 Enum values.** Partly answered (see [Grind event](#grind-event)). Open: the full sets.
+- **Q6 Enum values.** Mostly answered (Live, 19 grinds and 9 shots over 7 days): `recipeMode`
+  `Gbw`; `recipeType` `SingleShot` / `DoubleShot`; `filterType` `DOUBLE`; `triggerMode`
+  `PortafilterDetection` / `StartButton`; `successful` `true` / `false` (false once, alongside the
+  one unweighed grind); `stopType` `AutoTimerFlow`; `shotQuality.*` `PERFECT` / `OK`. Other
+  values (grind by time, other recipes) haven't occurred yet.
 - **Q7 Timestamps.** ✅ `deviceDate` (grinder clock, UTC), `cloudDate` (receipt, UTC),
   `localDate` (no zone) (App).
 - **Q8 Shot history for a home account.** ✅ Use the mobile API (App). The web-dashboard
   shot-history query refuses home accounts (Live).
-- **Q9 Multiple grinders.** Open: which device `last-events` with `limitToCurrentDevice` picks
-  when an account has several, and how to list grinders in the mobile API (`device-union/query`
-  with `deviceClasses: ["GRINDER"]` is untested; `admin-service/device/query` works, Live).
+- **Q9 Multiple grinders.** Grinders can be listed with `device-union/query`
+  `deviceClasses: ["GRINDER"]` as well as `admin-service/device/query`; both work for a home
+  account (Live, 2026-10-07). Open: which device `last-events` with `limitToCurrentDevice` picks
+  when an account has several (the app doesn't use it for polling).
 - **Q10 Rate limits.** Open: none seen. The official app makes about 50 requests when opened.
 - **Q11 Dedupe key.** ✅ `eventUuid` is present on every grind and brew event (App).
-- **Q12 Grind–brew pairing.** Open: brew events carry no grind reference. Pair by time.
+- **Q12 Grind–brew pairing.** ✅ A shot carries `payload.grindEventUuid` (Live, 2026-10-07); a
+  shot without it had no grind (scale only).
 - **Q13 Request headers.** ✅ No custom headers needed (Live, App).
 - **Q14 Terms of use.** Open. The API is undocumented and may change or be blocked without
   notice. Terms: `https://www.mahlkoenig.com/pages/sync-terms-of-use`.

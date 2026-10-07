@@ -5,6 +5,26 @@ sounds familiar.
 
 ## Before 1.0.0 (unreleased, 2026-10-07)
 
+- **Shots are joined to grinds by the cloud's link, and the widget shows deviations like the
+  official app.** The probe showed `payload.grindEventUuid` on every shot that had a grind, plus
+  `shotQuality`. Matching by time (15 minutes) is gone everywhere (widget, the grinder's "Shot
+  completed" dose and ratio, `brew_ratio`); the widget adds the brew time deviation (target −
+  actual) and colours both deviations green/orange/red. Tests: `test/summary.test.mts`,
+  `test/events.test.mts` "finds the grind the cloud links the shot to, never one by time",
+  `test/device.test.mts` "fires with yield, shot time and the dose and ratio of the grind the cloud
+  links it to".
+- **Answered by the first mobile-API probe (2026-10-07):** a wrong password gives 401 with an empty
+  body (the client already treats it as rejected credentials); `device-union/query` with
+  `GRINDER` works for home accounts, but pairing keeps `admin-service/device/query`, which works
+  too; recipe mode only shows `Gbw`, so `recipe_mode` keeps the raw value. Details in
+  docs/sync-api.md (Q1, Q6, Q9, Q12).
+- **`scripts/probe.mjs` targets the mobile API.** It probed the web-dashboard shot-history query,
+  which refuses home accounts. It now queries the mobile endpoints the app uses (devices per class,
+  the status block, 7 days of grinds and shots with the value sets of `triggerMode`, `recipeMode`,
+  `stopType` and every field path, recipes, recipe thresholds), optionally a wrong password
+  (`--bad-login`), and runs the app's own `lib/SyncClient.mts` end to end (Node 24 imports `.mts`
+  directly). The report stays redacted (any `…Id` key, serials, e-mails, tokens).
+
 - **A 0.0 g grind counted as a purge.** The grinder reports `weightActual: 0` when it didn't weigh a
   grind (2026-10-02 13:31, target 20 g, followed by a 42.5 g shot; the official app shows −20 g).
   The purge rule (dose < 5 g) fired "Grind completed" with `is_purge` and kept the previous grind

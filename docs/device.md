@@ -91,7 +91,7 @@ weighed: its dose is unknown (null), so it's never a purge. Purges fire "Grind c
 | `recipe_mode` (string) | `payload.recipeMode`, raw (e.g. `Gbw`) | |
 | `standby` (boolean) | `status.status.standbyActive` | |
 | `measure_temperature` | `status.status.motorTemperature` | Titled "Motor temperature"; °C assumed |
-| `yield_weight` (g), `shot_time` (s), `brew_ratio` | Last shot; ratio uses the dose of the last real grind ≤ 15 min before it | Added at runtime when a scale is paired or a shot is seen |
+| `yield_weight` (g), `shot_time` (s), `brew_ratio` | Last shot; the ratio uses the dose of the grind the cloud links to it (`linkedGrind`, by `grindEventUuid`), cleared when there is none | Added at runtime when a scale is paired or a shot is seen |
 
 The grind capabilities (dose, grind setting, grind time, the three targets, recipe mode) belong to
 one grind and use `showOrClear()`: an unknown value (an unweighed grind, a recipe without a target)

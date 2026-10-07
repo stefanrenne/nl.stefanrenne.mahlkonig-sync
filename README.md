@@ -66,8 +66,8 @@ scale has no dose or ratio: those come from the grinder, whose own *Shot complet
   when it was started with the button) and *Is purge* (yes/no).
   Fires once for every grind, purges included: add a check on *Is purge* to leave them out.
 - **Shot completed** (Sync Scale), with the tokens *Yield (g)*, *Shot time (s)*, *Dose (g)* and
-  *Ratio*. Dose and ratio come from the last real grind up to 15 minutes before the shot; they are
-  0 when there was none.
+  *Ratio*. Dose and ratio come from the grind the Mahlkönig Sync cloud links to the shot (like the
+  official app does); they are 0 when there is none.
 
 **When…** (Sync Scale)
 
@@ -87,9 +87,9 @@ the history in the Mahlkönig Sync app: a timeline of your latest grinds and sho
 the widget settings), newest first. With 1 it shows just the latest grind or shot, without the
 timeline.
 
-- A grind with the shot that followed it (within 15 minutes) shows both cards joined together:
-  grind weight (with how far it was off the recipe's target), disc distance, brew weight, brew time
-  and the brew ratio.
+- A grind with its shot (as the Mahlkönig Sync cloud links them) shows both cards joined together:
+  grind weight and brew time with how far they were off the recipe's targets (green, orange or
+  red, like the official app), disc distance, brew weight and the brew ratio.
 - A grind without a shot (purges included) shows grind weight and disc distance.
 - A shot without a grind shows brew weight and brew time.
 

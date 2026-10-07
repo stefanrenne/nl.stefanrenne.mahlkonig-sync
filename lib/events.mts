@@ -22,6 +22,10 @@ export interface Brew {
   at: string;
   yieldG: number | null;
   shotTimeS: number | null;
+  /** The grind the Sync cloud links this shot to (`payload.grindEventUuid`), if any. */
+  grindUuid: string | null;
+  /** The cloud's verdict per aspect ("PERFECT", "OK", …), on shots with a grind. */
+  quality: { brewTime: string | null; grindWeight: string | null } | null;
 }
 
 /** What the device remembers between polls (persisted in the device store). */
@@ -45,8 +49,6 @@ export interface TrackerState {
 const SEEN_LIMIT = 200;
 const RECENT_GRINDS_LIMIT = 100;
 const RECENT_BREWS_LIMIT = 50;
-/** A shot only gets a dose and ratio when the grind came at most this long before it. */
-export const MAX_GRIND_TO_SHOT_MS = 15 * 60_000;
 
 export function emptyTrackerState(): TrackerState {
   return {
@@ -109,6 +111,10 @@ export function parseBrew(raw: RawBrewEvent | null | undefined): Brew | null {
     at,
     yieldG: grams(raw.payload?.mass),
     shotTimeS: seconds(raw.payload?.duration),
+    grindUuid: stringOrNull(raw.payload?.grindEventUuid),
+    quality: raw.shotQuality
+      ? { brewTime: stringOrNull(raw.shotQuality.brewTime), grindWeight: stringOrNull(raw.shotQuality.grindWeight) }
+      : null,
   };
 }
 
@@ -122,22 +128,18 @@ export function isPurge(grind: Grind, purgeThresholdG: number): boolean {
   return grind.doseG !== null && grind.doseG < purgeThresholdG;
 }
 
-/** The dose for a shot: the last real grind, if it happened shortly before the shot. */
-export function doseForBrew(brew: Brew, lastRealGrind: Grind | null): number | null {
-  if (lastRealGrind?.doseG == null) {
+/**
+ * The grind a shot belongs to: the one the Sync cloud links it to (`payload.grindEventUuid`),
+ * looked up in any list of grinds. A shot without a link, or whose grind isn't in the lists, has
+ * none: the app never guesses by time (docs/history.md).
+ */
+export function linkedGrind(brew: Brew, grinds: (Grind | null)[]): Grind | null {
+  if (brew.grindUuid === null) {
     return null;
   }
-  const gap = Date.parse(brew.at) - Date.parse(lastRealGrind.at);
-  return gap >= 0 && gap <= MAX_GRIND_TO_SHOT_MS ? lastRealGrind.doseG : null;
+  return grinds.find((grind) => grind?.uuid === brew.grindUuid) ?? null;
 }
 
-/** The newest real (non-purge) grind at or before the shot, from any list of grinds. */
-export function realGrindBefore(brew: Brew, grinds: (Grind | null)[], purgeThresholdG: number): Grind | null {
-  const shotAt = Date.parse(brew.at);
-  return grinds
-    .filter((grind): grind is Grind => grind !== null && !isPurge(grind, purgeThresholdG) && Date.parse(grind.at) <= shotAt)
-    .sort((a, b) => Date.parse(b.at) - Date.parse(a.at))[0] ?? null;
-}
 
 /** Appends events to a recent list: unique by id, oldest first, capped to the newest `limit`. */
 function remember<T extends { uuid: string; at: string }>(recent: T[], events: T[], limit: number): T[] {

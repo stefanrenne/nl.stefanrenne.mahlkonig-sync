@@ -10,7 +10,7 @@ Vitest runs the `.mts` sources directly. `npm test` first type-checks the tests
 | `vitest.config.mjs` | Aliases `homey` (only exists inside the Homey runtime) to `test/mocks/homey.mts`. |
 | `test/mocks/homey.mts` | `App`, `Device`, `Driver` stand-ins. The `Device` keeps capabilities, values, settings, store (JSON-copied like Homey's) and availability in plain fields, and records `error()` calls in `errors`. `setCapabilityValue` throws for a capability the device doesn't have. |
 | `test/helpers/fake-homey.mts` | `createFakeHomey()`: flow cards (`FakeCard` with a `trigger` spy, `tokens()` and `run()`), `__` returning the key (plus placeholders as JSON), `i18n.getLanguage() = 'en'`, `clock.getTimezone() = 'Europe/Amsterdam'`, `setTimeout`/`clearTimeout` spies, an `api.realtime` spy, `drivers.getDriver(id).getDevices()` backed by the returned `devices` map, and `dashboards.getWidget()` that records autocomplete listeners in `widgetAutocomplete`. Loads the real generated `app.json` as `manifest`. |
-| `test/fixtures/*.json` | Real responses from the official app (grind events with the maintainer's purge and 20 g shot, last events, device record, scale binding, scale list), with every identifier replaced by a fake one. |
+| `test/fixtures/*.json` | Real responses from the official app (grind events with the maintainer's purge and 20 g shot, last events, device record, scale binding, scale list, brew events with and without a grind link), with every identifier replaced by a fake one. |
 | `test/tsconfig.json` | Extends the root config with `noEmit` and `rootDir: ".."`, and re-declares `exclude` (the root excludes `test/`). |
 | `.homeyignore` | Keeps `test/`, `scripts/`, `docs/`, `probe-output/` and the configs out of the app bundle. |
 
