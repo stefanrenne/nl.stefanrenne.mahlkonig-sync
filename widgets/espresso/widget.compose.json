@@ -19,6 +19,45 @@
         "en": "Grinder",
         "nl": "Molen"
       }
+    },
+    {
+      "id": "count",
+      "type": "dropdown",
+      "value": "5",
+      "title": {
+        "en": "Number of grinds and shots",
+        "nl": "Aantal maalbeurten en shots"
+      },
+      "values": [
+        {
+          "id": "1",
+          "title": {
+            "en": "1",
+            "nl": "1"
+          }
+        },
+        {
+          "id": "3",
+          "title": {
+            "en": "3",
+            "nl": "3"
+          }
+        },
+        {
+          "id": "5",
+          "title": {
+            "en": "5",
+            "nl": "5"
+          }
+        },
+        {
+          "id": "10",
+          "title": {
+            "en": "10",
+            "nl": "10"
+          }
+        }
+      ]
     }
   ]
 }

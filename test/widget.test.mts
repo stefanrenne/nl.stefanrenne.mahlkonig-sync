@@ -14,7 +14,7 @@ function fakeGrinder(id: string, name: string) {
   return {
     getData: () => ({ id }),
     getName: () => name,
-    widgetTimeline: vi.fn((_now: number) => [{ id }]),
+    widgetTimeline: vi.fn((limit: number) => [{ id, limit }]),
   }
 }
 
@@ -30,8 +30,21 @@ describe('widget API getTimeline', () => {
     const office = fakeGrinder('GRINDER-2', 'Office')
     devices.set('e64ws', [kitchen, office])
 
-    expect(await widgetApi.getTimeline(request({ device: 'GRINDER-2' }))).toEqual([{ id: 'GRINDER-2' }])
+    expect(await widgetApi.getTimeline(request({ device: 'GRINDER-2', count: '10' }))).toEqual([{ id: 'GRINDER-2', limit: 10 }])
     expect(kitchen.widgetTimeline).not.toHaveBeenCalled()
+  })
+
+  it('shows 5 entries for a missing or unexpected count', async () => {
+    devices.set('e64ws', [fakeGrinder('GRINDER-1', 'Kitchen')])
+
+    expect(await widgetApi.getTimeline(request({ device: 'GRINDER-1' }))).toEqual([{ id: 'GRINDER-1', limit: 5 }])
+    expect(await widgetApi.getTimeline(request({ device: 'GRINDER-1', count: '1000' }))).toEqual([{ id: 'GRINDER-1', limit: 5 }])
+  })
+
+  it('can show a single entry', async () => {
+    devices.set('e64ws', [fakeGrinder('GRINDER-1', 'Kitchen')])
+
+    expect(await widgetApi.getTimeline(request({ device: 'GRINDER-1', count: '1' }))).toEqual([{ id: 'GRINDER-1', limit: 1 }])
   })
 
   it('explains when the grinder is no longer in Homey', async () => {

@@ -46,10 +46,11 @@ These were the maintainer's calls. Don't file them as bugs or reopen them withou
 - **Disc usage and disc health are hidden** (device and widget): the cloud's `discUsageTime` and
   `discHealth` are undocumented and their meaning couldn't be verified (`discHealth` was 0 on a
   nearly new grinder). Show them again only once their meaning is known.
-- **The Espresso widget is one merged list of the last 24 hours**, like the official app's history:
-  grinds and shots, each shot matched with the newest grind up to 15 minutes before it. A first
-  version with "last grind/shot", "today", "status" and "recent grinds" sections was replaced on
-  2026-10-02 at the maintainer's request. The widget never calls the cloud.
+- **The Espresso widget looks like the official app's history**: a timeline of the latest 1/3/5/10
+  grinds and shots (no timeline rail for 1), each shot matched with the newest grind up to 15 minutes before it, with
+  device cards, a link badge and the brew ratio. Earlier versions (sections for last/today/status,
+  then a plain 24-hour list) were replaced at the maintainer's request (2026-10-02, 2026-10-07).
+  The widget never calls the cloud.
 - **Every grinder poll reads the whole last 24 hours** (grinds and shots) instead of only "since the
   newest event seen". The shorter window made the widget's list miss events (2026-10-02: only 1 of
   4 events of the day reached it).

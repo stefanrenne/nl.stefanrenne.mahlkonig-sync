@@ -430,17 +430,23 @@ describe('Espresso widget', () => {
     expect(device.available).toBe(true)
   })
 
-  it('lists the stored grinds and shots of the last 24 hours, shots matched with their grinds', async () => {
+  it('lists the stored grinds and shots, newest first, shots matched with their grinds', async () => {
     const device = createDevice()
     await device.onInit()
     client.findGrindEvents.mockResolvedValueOnce([grindEvent('purge', 20, 1_500, 'StartButton'), grindEvent('real', 25, 18_000)])
     client.findBrewEvents.mockResolvedValueOnce([brewEvent('shot', 18, 36_000)])
     await device.poll()
 
-    expect(device.widgetTimeline(Date.now())).toEqual([
-      { at: expect.any(String), grind: { weightG: 1.5, discDistance: 139 }, brew: { weightG: 36, timeS: 27.5 } },
-      { at: expect.any(String), grind: { weightG: 18, discDistance: 139 }, brew: null },
+    expect(device.widgetTimeline(5)).toEqual([
+      {
+        at: expect.any(String),
+        grind: { weightG: 1.5, targetG: 20, deviationG: -18.5, discDistance: 139 },
+        brew: { weightG: 36, timeS: 27.5 },
+        ratio: 24,
+      },
+      { at: expect.any(String), grind: { weightG: 18, targetG: 20, deviationG: -2, discDistance: 139 }, brew: null, ratio: null },
     ])
+    expect(device.widgetTimeline(1)).toHaveLength(1)
   })
 })
 
@@ -493,7 +499,7 @@ describe('upgrading devices paired with an older version', () => {
     const from = client.findGrindEvents.mock.calls[0][1] as Date
     expect(from.toISOString()).toBe('2026-10-01T07:30:00.000Z')
     expect(card('grind_completed').trigger).not.toHaveBeenCalled()
-    expect(device.widgetTimeline(Date.now())).toHaveLength(2)
+    expect(device.widgetTimeline(5)).toHaveLength(2)
     expect(homey.api.realtime).toHaveBeenCalled()
   })
 })

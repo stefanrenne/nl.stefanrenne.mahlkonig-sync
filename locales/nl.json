@@ -17,10 +17,13 @@
     "chooseGrinder": "Kies een molen in de widgetinstellingen.",
     "noDevice": "Deze molen staat niet meer in Homey. Kies een andere in de widgetinstellingen.",
     "error": "De molen kon niet worden geladen: __message__",
-    "empty": "Geen maalbeurten of shots in de afgelopen 24 uur",
+    "empty": "Nog geen maalbeurten of shots",
+    "grinder": "E64 WS",
+    "scale": "Sync Scale",
     "grindWeight": "Maalgewicht",
     "discDistance": "Schijfafstand",
     "brewWeight": "Shotgewicht",
-    "brewTime": "Shottijd"
+    "brewTime": "Shottijd",
+    "ratio": "Verhouding"
   }
 }

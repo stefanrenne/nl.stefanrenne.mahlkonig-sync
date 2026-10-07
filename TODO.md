@@ -22,6 +22,10 @@ Status: `[ ]` open, `[~]` in progress, `[?]` needs a decision or verification.
 
 ## Verify on real data
 
+- [?] **Brew time deviation in the widget**: the official app shows one next to the brew time
+  (−3.0 s at 28.0 s on 2026-10-02), but its target doesn't match the recipe's `brewTimeRecipe`
+  (25 s). Find where the app's target comes from (a brew-event field, or the cloud recipe) before
+  showing it. Also confirm the colour rule (assumed: green within 5 %, red outside).
 - [?] **A grind of 0.0 g counts as a purge.** On 2026-10-02 at 13:31 the grinder reported 0.0 g
   (target 20 g) followed by a 42.5 g shot; the official app shows it as a normal grind with a
   −20 g shortfall. The purge rule (dose < 5 g) fires "Grind completed" with `is_purge` and keeps

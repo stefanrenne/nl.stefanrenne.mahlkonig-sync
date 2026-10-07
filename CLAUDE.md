@@ -37,7 +37,7 @@ client), `test/events.test.mts` (parsing, purges, new-event detection), `test/de
 (grinder polling, capabilities, triggers, errors, and the shared `lib/SyncDevice.mts`),
 `test/driver.test.mts` (grinder pairing, repair, condition, and the shared `lib/SyncDriver.mts`),
 `test/scale.test.mts` (the Sync Scale device and driver), `test/summary.test.mts` (the widget's
-24-hour list and grind/shot matching), `test/widget.test.mts` (widget API and grinder picker),
+timeline and grind/shot matching), `test/widget.test.mts` (widget API and grinder picker),
 `test/manifest.test.mts` (compose files, translations, versions). Only change existing assertions
 when the behaviour change is intended, and say so in the commit. See docs/testing.md.
 
@@ -65,8 +65,8 @@ finish an item, move it to `COMPLETED.md` in the same change. The "Known issues"
 - `docs/device.md`: the `e64ws` device: pairing, the poll cycle, tracker state, capabilities,
   settings, error handling (also the shared poll loop and pairing).
 - `docs/scale.md`: the `sync-scale` device.
-- `docs/widget.md`: the Espresso dashboard widget: the 24-hour list, grind/shot matching, API,
-  refresh, layout.
+- `docs/widget.md`: the Espresso dashboard widget: the timeline (like the official app's history),
+  grind/shot matching, settings, API, refresh, layout.
 - `docs/flow-cards.md`: the flow cards, their tokens and when they fire.
 - `docs/testing.md`: test setup, fakes, fixtures and conventions.
 - `docs/history.md`: how the API was found, and deliberate decisions not to revisit.
@@ -140,7 +140,7 @@ When finishing a feature, check both before committing.
 - **`drivers/sync-scale/`** lists the account's scales and polls one scale's brew events: yield,
   shot time and `scale_shot_completed`. No dose or ratio (those stay on the grinder, which also
   keeps its own shot capabilities and card: a shot fires on both devices, on purpose).
-- **`widgets/espresso/`** lists the last 24 hours (grinds and shots, matched by time) from the
+- **`widgets/espresso/`** shows the latest 1/3/5/10 grinds and shots (matched by time) from the
   grinder device's stored state through `widgetTimeline()` (`lib/summary.mts`, pure) and never
   calls the cloud. The grinder emits `espresso.updated` after
   a poll that changed something; `app.mts` registers the widget's grinder picker.

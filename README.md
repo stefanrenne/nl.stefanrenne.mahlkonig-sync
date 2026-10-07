@@ -82,13 +82,16 @@ grinder's when you want dose and ratio, the scale's when you only care about the
 
 ### Espresso widget
 
-Add the **Espresso** widget to a Homey dashboard and pick your grinder in its settings. It lists
-the last 24 hours, newest first, like the history in the Mahlkönig Sync app:
+Add the **Espresso** widget to a Homey dashboard and pick your grinder in its settings. It looks like
+the history in the Mahlkönig Sync app: a timeline of your latest grinds and shots (1, 3, 5 or 10, set in
+the widget settings), newest first. With 1 it shows just the latest grind or shot, without the
+timeline.
 
-- a grind with the shot that followed it (matched when the shot came within 15 minutes): grind
-  weight, disc distance, brew weight and brew time;
-- a grind without a shot (purges included): grind weight and disc distance;
-- a shot without a grind: brew weight and brew time.
+- A grind with the shot that followed it (within 15 minutes) shows both cards joined together:
+  grind weight (with how far it was off the recipe's target), disc distance, brew weight, brew time
+  and the brew ratio.
+- A grind without a shot (purges included) shows grind weight and disc distance.
+- A shot without a grind shows brew weight and brew time.
 
 The widget updates by itself after each check and doesn't use any extra internet traffic. Shots
 need a Sync Scale paired with the grinder.

@@ -50,9 +50,9 @@ export default class E64WSDevice extends SyncDevice {
     this.shotCompleted = this.homey.flow.getDeviceTriggerCard('shot_completed');
   }
 
-  /** What the Espresso widget shows: the last 24 hours, shots matched with their grinds. */
-  widgetTimeline(now: number): TimelineEntry[] {
-    return timelineFromState(this.trackerState(), now);
+  /** What the Espresso widget shows: the latest `limit` grinds/shots, shots matched with their grinds. */
+  widgetTimeline(limit: number): TimelineEntry[] {
+    return timelineFromState(this.trackerState(), limit);
   }
 
   /** For the "Last grind was less than X minutes ago" condition. Purges don't count. */

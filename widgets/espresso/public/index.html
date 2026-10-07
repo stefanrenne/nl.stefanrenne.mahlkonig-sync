@@ -4,28 +4,129 @@
     <meta charset="utf-8">
     <style>
       /* The widget body (homey-widget) already has the standard padding: none of our own. */
-      .entry + .entry {
-        margin-top: var(--homey-su-2);
+      :root {
+        --card: rgba(127, 127, 127, 0.12);
+        --rail: rgba(127, 127, 127, 0.45);
+        --good: var(--homey-color-green, #3fb950);
+        --bad: var(--homey-color-red, #e5534b);
+      }
+
+      /* Timeline like the official app: a vertical line with a dot and the time per event. */
+      .event {
+        position: relative;
+        padding-left: 22px;
+      }
+      .event::before {
+        content: '';
+        position: absolute;
+        left: 4px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--rail);
+      }
+      .event:first-child::before {
+        top: 9px;
+      }
+      .event:last-child::before {
+        bottom: auto;
+        height: 9px;
+      }
+      .event:only-child::before {
+        display: none;
+      }
+      .dot {
+        position: absolute;
+        left: 1px;
+        top: 5px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--rail);
+      }
+      .event + .event {
         padding-top: var(--homey-su-2);
-        border-top: var(--homey-line-light);
+      }
+      .event + .event .dot {
+        top: calc(var(--homey-su-2) + 5px);
       }
       .time {
-        margin-bottom: var(--homey-su-1);
+        margin-bottom: 6px;
       }
-      /* Two values per row: left and right, like the official app. */
-      .pair {
+
+      .card {
+        background: var(--card);
+        border-radius: 14px;
+        padding: 10px 14px 12px;
+      }
+      .card-title {
+        margin-bottom: 4px;
+      }
+      .values {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 2px var(--homey-su-2);
-      }
-      .pair + .pair {
-        margin-top: var(--homey-su-1);
-      }
-      .pair > :nth-child(2n) {
-        text-align: right;
+        gap: 0 var(--homey-su-2);
       }
       .value {
         font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      .deviation {
+        margin-left: 6px;
+        font-size: 0.75em;
+        font-weight: 500;
+      }
+      .deviation.good {
+        color: var(--good);
+      }
+      .deviation.bad {
+        color: var(--bad);
+      }
+
+      /* A grind and its shot: two cards joined by a link badge, like the official app. */
+      .linked {
+        position: relative;
+        display: grid;
+        gap: 4px;
+      }
+      .link {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 30px;
+        height: 30px;
+        margin: -15px 0 0 -15px;
+        border-radius: 50%;
+        background: var(--homey-background-color, #1f2029);
+        border: 3px solid var(--card);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .link svg {
+        width: 14px;
+        height: 14px;
+        stroke: currentColor;
+      }
+      .ratio {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 6px;
+      }
+      .chip {
+        background: var(--card);
+        border-radius: 4px;
+        padding: 1px 6px;
+        font-variant-numeric: tabular-nums;
+      }
+      /* A single entry needs no timeline: no rail, no dot, no indent. */
+      .single .event {
+        padding-left: 0;
+      }
+      .single .event::before,
+      .single .dot {
+        display: none;
       }
       .message {
         text-align: center;
@@ -39,9 +140,14 @@
 
     <script type="text/javascript">
       const $container = document.getElementById('container');
+      const LINK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+        + '<path d="M10 14a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/>'
+        + '<path d="M14 10a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg>';
 
       function onHomeyReady(Homey) {
-        const device = Homey.getSettings().device;
+        const settings = Homey.getSettings();
+        const device = settings.device;
+        $container.classList.toggle('single', String(settings.count) === '1');
 
         // Values only ever go into the page through textContent.
         function el(tag, className, text) {
@@ -51,13 +157,15 @@
           return node;
         }
 
-        function number(value, decimals, unit) {
-          if (value === null || value === undefined) return '–';
-          const text = Number(value).toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
-          return `${text} ${unit}`;
+        function number(value, decimals) {
+          return Number(value).toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
         }
 
-        // "08:59" today, "Wed 22:10" for yesterday evening.
+        function amount(value, decimals, unit) {
+          return value === null || value === undefined ? '–' : `${number(value, decimals)} ${unit}`;
+        }
+
+        // "13:31" today, "Wed 22:10" for an earlier day.
         function when(iso) {
           const date = new Date(iso);
           const time = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
@@ -65,32 +173,63 @@
           return `${date.toLocaleDateString(undefined, { weekday: 'short' })} ${time}`;
         }
 
-        // One row of two labelled values: labels small, values below them.
-        function pair(left, right) {
-          const row = el('div', 'pair');
-          row.append(
-            el('div', 'homey-text-small-light', left[0]),
-            el('div', 'homey-text-small-light', right[0]),
-            el('div', 'homey-text-medium value', left[1]),
-            el('div', 'homey-text-medium value', right[1]),
-          );
-          return row;
+        // A label with its value below it; an optional coloured deviation next to the value.
+        function field(label, value, deviation) {
+          const cell = el('div');
+          const line = el('div', 'homey-text-medium value', value);
+          if (deviation) line.append(el('span', `deviation ${deviation.className}`, deviation.text));
+          cell.append(el('div', 'homey-text-small-light', label), line);
+          return cell;
+        }
+
+        // Green within 5 % of the target, red outside it (the recipe threshold bands are ±5/±10 %).
+        function deviationOf(grind) {
+          if (grind.deviationG === null || grind.targetG === null || !grind.targetG) return null;
+          const sign = grind.deviationG > 0 ? '+' : '';
+          const good = Math.abs(grind.deviationG) <= grind.targetG * 0.05;
+          return { text: `${sign}${number(grind.deviationG, 1)} g`, className: good ? 'good' : 'bad' };
+        }
+
+        function card(title, fields) {
+          const node = el('div', 'card');
+          const values = el('div', 'values');
+          values.append(...fields);
+          node.append(el('div', 'homey-text-bold card-title', title), values);
+          return node;
+        }
+
+        function grindCard(grind) {
+          return card(Homey.__('widget.grinder'), [
+            field(Homey.__('widget.grindWeight'), amount(grind.weightG, 1, 'g'), deviationOf(grind)),
+            field(Homey.__('widget.discDistance'), amount(grind.discDistance, 0, 'µm')),
+          ]);
+        }
+
+        function brewCard(brew) {
+          return card(Homey.__('widget.scale'), [
+            field(Homey.__('widget.brewWeight'), amount(brew.weightG, 1, 'g')),
+            field(Homey.__('widget.brewTime'), amount(brew.timeS, 1, 's')),
+          ]);
         }
 
         function renderEntry(entry) {
-          const node = el('div', 'entry');
-          node.append(el('div', 'homey-text-small-light time', when(entry.at)));
-          if (entry.grind) {
-            node.append(pair(
-              [Homey.__('widget.grindWeight'), number(entry.grind.weightG, 1, 'g')],
-              [Homey.__('widget.discDistance'), number(entry.grind.discDistance, 0, 'µm')],
-            ));
-          }
-          if (entry.brew) {
-            node.append(pair(
-              [Homey.__('widget.brewWeight'), number(entry.brew.weightG, 1, 'g')],
-              [Homey.__('widget.brewTime'), number(entry.brew.timeS, 1, 's')],
-            ));
+          const node = el('div', 'event');
+          node.append(el('span', 'dot'), el('div', 'homey-text-small-light time', when(entry.at)));
+          if (entry.grind && entry.brew) {
+            const linked = el('div', 'linked');
+            const link = el('div', 'link');
+            link.innerHTML = LINK_ICON; // a constant, never data
+            linked.append(grindCard(entry.grind), brewCard(entry.brew), link);
+            const ratio = el('div', 'ratio');
+            ratio.append(
+              el('span', 'homey-text-small-light', Homey.__('widget.ratio')),
+              el('span', 'homey-text-small chip', entry.ratio === null ? '1: -' : `1:${number(entry.ratio, 1)}`),
+            );
+            node.append(linked, ratio);
+          } else if (entry.grind) {
+            node.append(grindCard(entry.grind));
+          } else if (entry.brew) {
+            node.append(brewCard(entry.brew));
           }
           return node;
         }
@@ -105,7 +244,8 @@
             return;
           }
           try {
-            const entries = await Homey.api('GET', `/timeline?device=${encodeURIComponent(device.id)}`, {});
+            const query = `device=${encodeURIComponent(device.id)}&count=${encodeURIComponent(settings.count || '5')}`;
+            const entries = await Homey.api('GET', `/timeline?${query}`, {});
             if (entries.length === 0) {
               showMessage(Homey.__('widget.empty'));
               return;

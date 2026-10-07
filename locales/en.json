@@ -17,10 +17,13 @@
     "chooseGrinder": "Choose a grinder in the widget settings.",
     "noDevice": "This grinder is no longer in Homey. Choose another one in the widget settings.",
     "error": "Couldn't load the grinder: __message__",
-    "empty": "No grinds or shots in the last 24 hours",
+    "empty": "No grinds or shots yet",
+    "grinder": "E64 WS",
+    "scale": "Sync Scale",
     "grindWeight": "Grind weight",
     "discDistance": "Disc distance",
     "brewWeight": "Brew weight",
-    "brewTime": "Brew time"
+    "brewTime": "Brew time",
+    "ratio": "Brew ratio"
   }
 }
