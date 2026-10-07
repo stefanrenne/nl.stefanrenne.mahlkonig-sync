@@ -3,6 +3,26 @@
 Finished work with its context, newest first. Check here before re-investigating something that
 sounds familiar.
 
+## Before 1.0.0 (unreleased, 2026-10-07)
+
+- **A 0.0 g grind counted as a purge.** The grinder reports `weightActual: 0` when it didn't weigh a
+  grind (2026-10-02 13:31, target 20 g, followed by a 42.5 g shot; the official app shows −20 g).
+  The purge rule (dose < 5 g) fired "Grind completed" with `is_purge` and kept the previous grind
+  on the capabilities. Decision and fix: 0 mg parses as an unknown dose (`doseG: null`), which is
+  never a purge. Tests: `test/events.test.mts` "treats a grind weight of 0 as unknown…",
+  `test/device.test.mts` "treats an unweighed (0.0 g) grind as a real grind…".
+- **Per-grind capabilities kept stale values.** `show()` skips unknown values, so an unknown dose or
+  a recipe without a target left the previous grind's value on the device. Fix: the grind
+  capabilities use `showOrClear()` (`lib/SyncDevice.mts`), which sets null. Test:
+  `test/device.test.mts` "clears a target when the recipe of the newest grind has none".
+- **The Sync Scale's "Paired grinder" label went stale after re-pairing.** It was only set at
+  pairing. Fix: the scale device refreshes `serial` and `grinder` every 10 minutes via
+  `listScales()`; a cloud error is only logged. Test: `test/scale.test.mts` "keeps its serial and
+  paired-grinder labels current…".
+- **Verified on live data (2026-10-02):** `brew-event/find` returns shots in the assumed shape (the
+  app showed 1.1 g / 454.5 s and 42.5 g / 28.0 s, matching the official app), and scale listing
+  works for a home account (the Sync Scale was paired).
+
 ## Before 1.0.0 (unreleased, 2026-10-01 – 2026-10-02)
 
 - **The grinder device stopped starting after disc usage/health were hidden.** The migration called

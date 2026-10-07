@@ -85,7 +85,9 @@ export function parseGrind(raw: RawGrindEvent | null | undefined): Grind | null 
   return {
     uuid: raw.eventUuid,
     at,
-    doseG: grams(payload.weightActual),
+    // 0 mg means the grinder didn't weigh this grind (the official app shows the full shortfall to
+    // the target): an unknown dose, not a purge (docs/history.md).
+    doseG: payload.weightActual ? grams(payload.weightActual) : null,
     // A recipe value of 0 means "no target" (seen for durationRecipe in grind-by-weight mode).
     doseTargetG: payload.weightRecipe ? grams(payload.weightRecipe) : null,
     grindSetting: numberOrNull(payload.dddActual),

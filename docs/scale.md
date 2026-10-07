@@ -18,7 +18,9 @@ shot fires on both.
 | `list_devices` | `SyncClient.listScales()`: `POST mobile-service/device-union/query` with `deviceClasses: ["SCALE"]` and `loadBindings: true`, as the official app does. If that's refused, it falls back to the scales in the `bindings` of `admin-service/device/query`. No scales → `pair.noScales`. |
 | `add_devices` | Name "Sync Scale", `data: { id: <scale deviceId> }`, credentials in the store, and the label settings `serial` and `grinder` ("Mahlkönig E64 WS (serial)" of the paired grinder, or `settings.noGrinder`). |
 
-The labels are only written at pairing; there is no periodic status refresh for the scale.
+The labels are refreshed every 10 minutes (and on the first poll) with `listScales()`, so
+re-pairing the scale to another grinder in the Sync app shows up by itself. A cloud error there is
+only logged and doesn't stop the shot polling.
 
 ## The poll cycle
 
@@ -42,9 +44,8 @@ Errors, backoff and recovery are the same as the grinder's.
 | Setting | Notes |
 |---|---|
 | `poll_interval` | Minutes, default 2, min 1 |
-| `serial`, `grinder` | Labels, written at pairing |
+| `serial`, `grinder` | Labels, written at pairing and refreshed every 10 minutes |
 
 ## Known issues
 
 - Brew events haven't been seen in a live `brew-event/find` response yet; see TODO.md.
-- The paired-grinder label doesn't update when the scale is paired with another grinder later.

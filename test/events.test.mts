@@ -67,6 +67,13 @@ describe('parseGrind', () => {
     expect(parseGrind({ ...rawShot, deviceDate: undefined })?.at).toBe('2026-10-02T06:59:43.762Z')
   })
 
+  it('treats a grind weight of 0 as unknown, so it is never a purge', () => {
+    const unweighed = parseGrind({ ...rawShot, payload: { ...rawShot.payload, weightActual: 0 } })!
+
+    expect(unweighed.doseG).toBeNull()
+    expect(isPurge(unweighed, 5)).toBe(false)
+  })
+
   it('treats a recipe value of 0 as "no target"', () => {
     const parsed = parseGrind({ ...rawShot, payload: { ...rawShot.payload, weightRecipe: 0, brewTimeRecipe: 0 } })
     expect(parsed).toMatchObject({ doseTargetG: null, brewTimeTargetS: null })

@@ -92,6 +92,20 @@ export default abstract class SyncDevice extends Homey.Device {
     }
   }
 
+  /**
+   * Like show(), but an unknown value clears the capability instead of keeping the old one: for
+   * values that belong to one event, where an old value would be misleading.
+   */
+  protected async showOrClear(capability: string, value: number | string | boolean | null | undefined) {
+    if (!this.hasCapability(capability)) {
+      return;
+    }
+    const next = value ?? null;
+    if (this.getCapabilityValue(capability) !== next) {
+      await this.setCapabilityValue(capability, next);
+    }
+  }
+
   /** Writes read-only label settings that changed. */
   protected async updateLabels(labels: Record<string, string>) {
     const changed = Object.fromEntries(Object.entries(labels).filter(([key, value]) => this.getSetting(key) !== value));

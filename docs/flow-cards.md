@@ -17,7 +17,8 @@ Unknown numbers are sent as `0`, because Homey tokens can't be null. `portafilte
 `false` for every other `triggerMode`: the start button (`StartButton`) and any value not seen yet.
 Only these two values have been observed; the full set is unknown (`docs/sync-api.md`, Q6).
 
-`is_purge` follows the `purge_threshold` device setting (dose below it).
+`is_purge` follows the `purge_threshold` device setting (dose below it). A grind of 0.0 g wasn't
+weighed: `dose` is `0` (unknown) and `is_purge` is `false`.
 
 ## Conditions
 

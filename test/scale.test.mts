@@ -29,11 +29,16 @@ describe('Sync Scale device', () => {
     capabilities: string[]
     capabilityValues: Map<string, unknown>
     store: Record<string, unknown>
+    settings: Record<string, unknown>
+    errors: unknown[][]
     available: boolean
     unavailableMessage: string | undefined
   }
 
-  let client: { findBrewEvents: ReturnType<typeof vi.fn<(...args: unknown[]) => Promise<RawBrewEvent[]>>> }
+  let client: {
+    findBrewEvents: ReturnType<typeof vi.fn<(...args: unknown[]) => Promise<RawBrewEvent[]>>>
+    listScales: ReturnType<typeof vi.fn<() => Promise<RawScale[]>>>
+  }
 
   function createDevice(store: Record<string, unknown> = { email: 'user@example.com', password: 'secret' }): Harness {
     class TestDevice extends SyncScaleDevice {
@@ -51,7 +56,7 @@ describe('Sync Scale device', () => {
   }
 
   beforeEach(() => {
-    client = { findBrewEvents: vi.fn(async () => []) }
+    client = { findBrewEvents: vi.fn(async () => []), listScales: vi.fn(async () => fixture('scales.json').items) }
   })
 
   it('has yield, shot time and last shot, and no dose or ratio', () => {
@@ -138,6 +143,43 @@ describe('Sync Scale device', () => {
 
     const from = client.findBrewEvents.mock.calls.at(-1)?.[1] as Date
     expect(from.toISOString()).toBe('2026-10-01T07:30:00.000Z')
+  })
+
+  it('keeps its serial and paired-grinder labels current, every 10 minutes', async () => {
+    const device = createDevice()
+    await device.onInit()
+
+    await device.poll()
+    expect(device.settings).toMatchObject({ serial: 'SCALE-1', grinder: 'Mahlkönig E64 WS (SERIAL-1)' })
+
+    // Re-paired with another grinder in the Sync app.
+    client.listScales.mockResolvedValue([{ deviceId: 'SCALE-1', serial: 'SCALE-1', type: 'scale', bindings: [{ toDevice: { deviceId: 'G2', type: 'E64WS', serial: 'SERIAL-2' } }] }])
+    vi.setSystemTime(Date.now() + 5 * MINUTE)
+    await device.poll()
+    expect(device.settings.grinder).toBe('Mahlkönig E64 WS (SERIAL-1)')
+    expect(client.listScales).toHaveBeenCalledTimes(1)
+
+    vi.setSystemTime(Date.now() + 5 * MINUTE)
+    await device.poll()
+    expect(device.settings.grinder).toBe('Mahlkönig E64 WS (SERIAL-2)')
+
+    client.listScales.mockResolvedValue([{ deviceId: 'SCALE-1', serial: 'SCALE-1', type: 'scale', bindings: [] }])
+    vi.setSystemTime(Date.now() + 10 * MINUTE)
+    await device.poll()
+    expect(device.settings.grinder).toBe('settings.noGrinder')
+  })
+
+  it('keeps polling shots when the label refresh fails', async () => {
+    client.listScales.mockRejectedValue(new SyncApiError('HTTP 500'))
+    client.findBrewEvents.mockResolvedValue([brewEvent('old', 30)])
+    const device = createDevice()
+    await device.onInit()
+
+    await device.tick()
+
+    expect(device.available).toBe(true)
+    expect(device.capabilityValues.get('yield_weight')).toBe(36.4)
+    expect(JSON.stringify(device.errors)).toContain('Scale info refresh failed')
   })
 
   it('goes unavailable on errors and explains rejected credentials', async () => {

@@ -211,6 +211,9 @@ From `grind-event/find` and `last-events.lastGrind`:
 - **Every grind is its own event, with or without a shot** (answers Q4). The maintainer's purge
   of 2026-10-02 is there: `durationActual` 1432, `weightActual` 1637, `triggerMode`
   `"StartButton"`. The 20 g shot right after it: 7926 / 19976, `"PortafilterDetection"`.
+- `weightActual: 0` means the grind wasn't weighed (2026-10-02 13:31: 0.0 g against a 20 g target,
+  followed by a 42.5 g shot; the official app shows it with a −20 g shortfall). The app treats it as
+  an unknown dose.
 - `weightActual` / `weightRecipe` in **mg**, `duration*` and `brewTimeRecipe` in **ms**
   (consistent with the HA conversions and with the purge/shot values).
 - `deviceDate` is the grinder's clock (UTC, ms), `cloudDate` the cloud's receipt (UTC, µs),

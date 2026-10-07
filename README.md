@@ -99,7 +99,8 @@ need a Sync Scale paired with the grinder.
 ### Purges
 
 The cloud records every grind, including a short purge to clear the chute. A grind counts as a
-purge when its dose is below the **Purge below** device setting (default 5 g).
+purge when its dose is below the **Purge below** device setting (default 5 g). A grind the grinder
+didn't weigh (0.0 g) is not a purge: its dose is shown as unknown.
 
 ### Device settings
 

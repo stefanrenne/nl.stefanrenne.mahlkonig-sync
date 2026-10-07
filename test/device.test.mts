@@ -202,6 +202,37 @@ describe('Grind completed', () => {
     expect(device.capabilityValues.get('dose_weight')).toBe(18.1)
   })
 
+  it('treats an unweighed (0.0 g) grind as a real grind with an unknown dose', async () => {
+    const device = createDevice()
+    await device.onInit()
+
+    await pollTwice(device, [grindEvent('unweighed', 1, 0)])
+
+    expect(card('grind_completed').tokens()).toEqual([
+      { dose: 0, grind_setting: 139, grind_time: 7.9, portafilter_detected: true, is_purge: false },
+    ])
+    // The previous grind's 18 g must not stay on the device: the dose is unknown now.
+    expect(device.capabilityValues.get('dose_weight')).toBeNull()
+    expect(device.capabilityValues.get('grind_time')).toBe(7.9)
+    expect(device.lastGrindWithin(5)).toBe(true)
+  })
+
+  it('clears a target when the recipe of the newest grind has none', async () => {
+    const device = createDevice()
+    await device.onInit()
+    client.findGrindEvents.mockResolvedValueOnce([grindEvent('with-target', 30, 18_000)])
+    await device.poll()
+    expect(device.capabilityValues.get('dose_target')).toBe(20)
+
+    const noTarget = grindEvent('no-target', 1, 18_000)
+    noTarget.payload = { ...noTarget.payload, weightRecipe: 0, brewTimeRecipe: 0 }
+    client.findGrindEvents.mockResolvedValueOnce([noTarget])
+    await device.poll()
+
+    expect(device.capabilityValues.get('dose_target')).toBeNull()
+    expect(device.capabilityValues.get('brew_time_target')).toBeNull()
+  })
+
   it('follows the purge threshold setting', async () => {
     const device = createDevice()
     device.settings.purge_threshold = 1

@@ -75,7 +75,8 @@ The state survives app restarts; a missing or partial value is merged over `empt
 ## Purges
 
 `isPurge(grind, purge_threshold)`: the dose is known and below the threshold (default 5 g). How the
-grind was started (`triggerMode`) doesn't matter. Purges fire "Grind completed" with
+grind was started (`triggerMode`) doesn't matter. A grind of 0.0 g (`weightActual: 0`) wasn't
+weighed: its dose is unknown (null), so it's never a purge. Purges fire "Grind completed" with
 `is_purge: true` and don't touch `lastRealGrind`.
 
 ## Capabilities
@@ -92,7 +93,10 @@ grind was started (`triggerMode`) doesn't matter. Purges fire "Grind completed" 
 | `measure_temperature` | `status.status.motorTemperature` | Titled "Motor temperature"; °C assumed |
 | `yield_weight` (g), `shot_time` (s), `brew_ratio` | Last shot; ratio uses the dose of the last real grind ≤ 15 min before it | Added at runtime when a scale is paired or a shot is seen |
 
-A capability is only written when the value is known (not `null`) and changed.
+The grind capabilities (dose, grind setting, grind time, the three targets, recipe mode) belong to
+one grind and use `showOrClear()`: an unknown value (an unweighed grind, a recipe without a target)
+clears the capability instead of keeping the previous grind's value. The other capabilities use
+`show()`, which only writes known values that changed.
 
 ## Settings
 
@@ -109,8 +113,6 @@ A capability is only written when the value is known (not `null`) and changed.
 - Brew events from `findBrewEvents` haven't been seen in a live response yet (the capture day had
   no shots); the parser assumes the same shape as `last-events.lastBrew`. See TODO.md.
 - The °C of the motor temperature is unverified. See TODO.md.
-- A grind can report 0.0 g (the official app shows it with its full shortfall to the target). The
-  purge rule counts it as a purge, so it doesn't update the grind capabilities. See TODO.md.
 - `discUsageTime` and `discHealth` from the status block are not shown: their meaning is unknown.
   Devices paired with an earlier build had `disc_usage` / `disc_health` capabilities; `onSyncInit`
   removes them. Their definitions stay in `.homeycompose/capabilities/` (not in the driver's list):

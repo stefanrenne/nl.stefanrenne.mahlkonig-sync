@@ -54,5 +54,12 @@ These were the maintainer's calls. Don't file them as bugs or reopen them withou
 - **Every grinder poll reads the whole last 24 hours** (grinds and shots) instead of only "since the
   newest event seen". The shorter window made the widget's list miss events (2026-10-02: only 1 of
   4 events of the day reached it).
+- **A grind weight of 0.0 g means "not weighed"** (unknown dose), never a purge (2026-10-07).
+- **Per-grind capabilities are cleared when unknown** (dose, grind setting, grind time, targets,
+  recipe mode), so a recipe without a target doesn't keep showing the previous one (2026-10-07).
+- **Two grinders get the same name at pairing** ("Mahlkönig E64 WS"); no serial suffix. The user
+  renames them in Homey (2026-10-07).
+- **The Sync Scale's labels are refreshed every 10 minutes**, so re-pairing a scale to another
+  grinder shows up without re-adding the device (2026-10-07).
 - **`.mts` instead of `.ts`.** The brief named `lib/SyncClient.ts`; the file is
   `lib/SyncClient.mts` to match the maintainer's other apps (TypeScript as ES modules).

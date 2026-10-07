@@ -179,14 +179,16 @@ export default class E64WSDevice extends SyncDevice {
     if (grind === null) {
       return;
     }
-    await this.show('dose_weight', grind.doseG);
-    await this.show('grind_setting', grind.grindSetting);
-    await this.show('grind_time', grind.grindTimeS);
+    // Every value belongs to this one grind: an unknown dose or a recipe without a target clears
+    // the capability rather than leaving the previous grind's value.
+    await this.showOrClear('dose_weight', grind.doseG);
+    await this.showOrClear('grind_setting', grind.grindSetting);
+    await this.showOrClear('grind_time', grind.grindTimeS);
     await this.show('last_grind', this.formatTime(grind.at));
-    await this.show('dose_target', grind.doseTargetG);
-    await this.show('grind_setting_target', grind.grindSettingTarget);
-    await this.show('brew_time_target', grind.brewTimeTargetS);
-    await this.show('recipe_mode', grind.recipeMode);
+    await this.showOrClear('dose_target', grind.doseTargetG);
+    await this.showOrClear('grind_setting_target', grind.grindSettingTarget);
+    await this.showOrClear('brew_time_target', grind.brewTimeTargetS);
+    await this.showOrClear('recipe_mode', grind.recipeMode);
   }
 
   private async showBrew(brew: Brew, grind: Grind | null) {
