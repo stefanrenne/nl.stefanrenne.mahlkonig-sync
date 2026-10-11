@@ -1,4 +1,4 @@
-import { type FlowCardTriggerDevice } from 'homey';
+import { type DiscoveryResultMDNSSD, type FlowCardTriggerDevice } from 'homey';
 import { SyncApiError } from '../../lib/SyncClient.mjs';
 import SyncDevice, { MINUTE, OVERLAP_MS } from '../../lib/SyncDevice.mjs';
 import {
@@ -17,6 +17,7 @@ import {
   type TrackerState,
 } from '../../lib/events.mjs';
 import { deviceName } from '../../lib/names.mjs';
+import { grinderHostNames, isGrinderAnnouncement, lookupFirst } from '../../lib/presence.mjs';
 import { timelineFromState, type TimelineEntry } from '../../lib/summary.mjs';
 
 /** Realtime event the Espresso widget listens to, with `{ deviceId }`. */
@@ -34,6 +35,8 @@ export default class E64WSDevice extends SyncDevice {
   private scaleId: string | number | null = null;
   private grindCompleted!: FlowCardTriggerDevice;
   private shotCompleted!: FlowCardTriggerDevice;
+  /** The grinder's address from its mDNS announcement (`hemrohsg<deviceId>`, `_workstation._tcp`). */
+  private discoveredAddress: string | null = null;
 
   protected async onSyncInit() {
     // Disc usage and disc health were shown before their meaning was known (docs/history.md).
@@ -47,6 +50,45 @@ export default class E64WSDevice extends SyncDevice {
     }
     this.grindCompleted = this.homey.flow.getDeviceTriggerCard('grind_completed');
     this.shotCompleted = this.homey.flow.getDeviceTriggerCard('shot_completed');
+  }
+
+  // mDNS discovery (driver.compose.json "discovery": "e64ws"): the announcement whose name starts
+  // with "hemrohsg" + this grinder's device id is this grinder.
+  onDiscoveryResult(result: DiscoveryResultMDNSSD): boolean {
+    return isGrinderAnnouncement(result, String(this.getData().id));
+  }
+
+  onDiscoveryAvailable(result: DiscoveryResultMDNSSD) {
+    this.useDiscoveredAddress(result);
+  }
+
+  onDiscoveryAddressChanged(result: DiscoveryResultMDNSSD) {
+    this.useDiscoveredAddress(result);
+  }
+
+  onDiscoveryLastSeenChanged(result: DiscoveryResultMDNSSD) {
+    this.useDiscoveredAddress(result);
+  }
+
+  protected offlineMessage(): string {
+    return this.homey.__('errors.grinderOffline');
+  }
+
+  /** The mDNS discovery result, else the grinder's `.local` host name (when Homey's resolver does mDNS). */
+  protected async resolveAddress(): Promise<string | null> {
+    return this.discoveredAddress ?? this.lookupHost(grinderHostNames(String(this.getData().id)));
+  }
+
+  /** Overridden in tests. */
+  protected lookupHost(names: string[]): Promise<string | null> {
+    return lookupFirst(names);
+  }
+
+  private useDiscoveredAddress(result: DiscoveryResultMDNSSD) {
+    if (result.address && result.address !== this.discoveredAddress) {
+      this.discoveredAddress = result.address;
+      this.checkPresence().catch((error) => this.error(error));
+    }
   }
 
   /** What the Espresso widget shows: the latest `limit` grinds/shots, shots matched with their grinds. */

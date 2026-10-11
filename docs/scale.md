@@ -33,6 +33,18 @@ only logged and doesn't stop the shot polling.
 
 Errors, backoff and recovery are the same as the grinder's.
 
+## Availability (is the scale on?)
+
+The scale announces nothing via mDNS, but registers the DHCP host name `SyncScale`, which routers
+like UniFi publish in their DNS (`SyncScale.localdomain`). `resolveAddress()` looks up `SyncScale`
+and `SyncScale.localdomain` (`lookupFirst`); the rest is the shared presence check in
+`docs/device.md` ("Availability from the local network"): store the address in `ip_address`,
+probe TCP port 80 (the scale refuses the connection when it's on and doesn't answer when it's off),
+and make the device unavailable ("The Sync Scale is switched off.") while it doesn't answer.
+
+Limits: the router has to publish DHCP names, and with two scales on one network the name is
+ambiguous; the user can then enter the address in the setting (a DHCP reservation helps).
+
 ## Capabilities and settings
 
 | Capability | Source |
@@ -45,6 +57,7 @@ Errors, backoff and recovery are the same as the grinder's.
 |---|---|
 | `poll_interval` | Minutes, default 2, min 1 |
 | `serial`, `grinder` | Labels, written at pairing and refreshed every 10 minutes |
+| `ip_address` | Text, group "Network": written when found via DNS, used when not |
 
 ## Known issues
 

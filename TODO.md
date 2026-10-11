@@ -13,6 +13,10 @@ Status: `[ ]` open, `[~]` in progress, `[?]` needs a decision or verification.
   gives "unauthorized third parties" access, and §4 limits use to private, non-commercial use.
   Options: publish with the README's disclaimer (risk on the user's account), or ask Mahlkönig
   first (sync@mahlkoenig.com).
+- [ ] **Availability on the Homey itself**: on 2026-10-11 both devices got their IP address on the
+  Homey (scale via DNS, grinder after removing the discovery conditions). Still to see: the scale
+  turning unavailable within ~30 s when switched off and available again when on, and which way
+  found the grinder (the driver logs the mDNS announcements it sees; remove that log once known).
 - [ ] Add `homeyCommunityTopicId` to `.homeycompose/app.json` once there's a forum topic.
 
 - [ ] **Espresso widget on a real dashboard, remaining checks**: light mode, tablet width, the count

@@ -25,7 +25,7 @@ afterEach(() => {
 })
 
 describe('Sync Scale device', () => {
-  type Harness = Pick<InstanceType<typeof SyncScaleDevice>, 'onInit' | 'tick' | 'poll'> & {
+  type Harness = Pick<InstanceType<typeof SyncScaleDevice>, 'onInit' | 'tick' | 'poll' | 'checkPresence'> & {
     capabilities: string[]
     capabilityValues: Map<string, unknown>
     store: Record<string, unknown>
@@ -40,10 +40,23 @@ describe('Sync Scale device', () => {
     listScales: ReturnType<typeof vi.fn<() => Promise<RawScale[]>>>
   }
 
+  /** Stands in for the router's DNS and the network. */
+  const network = { address: null as string | null, online: false, probed: [] as string[] }
+
   function createDevice(store: Record<string, unknown> = { email: 'user@example.com', password: 'secret' }): Harness {
     class TestDevice extends SyncScaleDevice {
       createClient() {
         return client as unknown as SyncClient
+      }
+
+      // Never touch the real network in tests.
+      protected async resolveAddress() {
+        return network.address
+      }
+
+      protected async probe(address: string) {
+        network.probed.push(address)
+        return network.online
       }
     }
     const Constructor = TestDevice as unknown as new (homey: FakeHomey, options: object) => Harness
@@ -57,6 +70,9 @@ describe('Sync Scale device', () => {
 
   beforeEach(() => {
     client = { findBrewEvents: vi.fn(async () => []), listScales: vi.fn(async () => fixture('scales.json').items) }
+    network.address = null
+    network.online = false
+    network.probed = []
   })
 
   it('has yield, shot time and last shot, and no dose or ratio', () => {
@@ -180,6 +196,42 @@ describe('Sync Scale device', () => {
     expect(device.available).toBe(true)
     expect(device.capabilityValues.get('yield_weight')).toBe(36.4)
     expect(JSON.stringify(device.errors)).toContain('Scale info refresh failed')
+  })
+
+  it('finds its address through the router\'s DNS, stores it in the IP setting, and is unavailable while switched off', async () => {
+    network.address = '192.168.1.35'
+    network.online = true
+    const device = createDevice()
+    await device.onInit()
+
+    await device.checkPresence()
+    expect(device.settings.ip_address).toBe('192.168.1.35')
+    expect(network.probed.at(-1)).toBe('192.168.1.35')
+    expect(device.available).toBe(true)
+
+    // Switched off: still resolvable, but no answer.
+    network.online = false
+    await device.checkPresence()
+    expect(device.available).toBe(false)
+    expect(device.unavailableMessage).toBe('errors.scaleOffline')
+
+    network.online = true
+    await device.checkPresence()
+    expect(device.available).toBe(true)
+  })
+
+  it('falls back to the IP setting, and stays available when no address is known at all', async () => {
+    const device = createDevice()
+    await device.onInit()
+    await device.checkPresence()
+    expect(network.probed).toEqual([])
+    expect(device.available).toBe(true)
+
+    device.settings.ip_address = ' 192.168.1.50 '
+    await device.checkPresence()
+
+    expect(network.probed.at(-1)).toBe('192.168.1.50')
+    expect(device.available).toBe(false)
   })
 
   it('goes unavailable on errors and explains rejected credentials', async () => {

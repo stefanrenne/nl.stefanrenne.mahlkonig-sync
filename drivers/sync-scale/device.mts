@@ -2,6 +2,7 @@ import { type FlowCardTriggerDevice } from 'homey';
 import { SyncApiError } from '../../lib/SyncClient.mjs';
 import SyncDevice, { MINUTE, OVERLAP_MS } from '../../lib/SyncDevice.mjs';
 import { pairedGrinderName } from '../../lib/names.mjs';
+import { SCALE_HOST_NAMES, lookupFirst } from '../../lib/presence.mjs';
 import { emptyScaleState, ingestBrews, parseBrew, type ScaleState } from '../../lib/events.mjs';
 
 const notNull = <T,>(value: T | null): value is T => value !== null;
@@ -44,6 +45,15 @@ export default class SyncScaleDevice extends SyncDevice {
     for (const brew of update.newBrews.filter((event) => this.isRecent(now, event.at))) {
       await this.trigger(this.shotCompleted, { yield: brew.yieldG ?? 0, shot_time: brew.shotTimeS ?? 0 });
     }
+  }
+
+  protected offlineMessage(): string {
+    return this.homey.__('errors.scaleOffline');
+  }
+
+  /** The scale announces no mDNS, but registers the DHCP name "SyncScale", which routers like UniFi resolve. */
+  protected async resolveAddress(): Promise<string | null> {
+    return lookupFirst(SCALE_HOST_NAMES);
   }
 
   /** Refreshes the serial and paired-grinder labels. Extra information: a cloud error is only logged. */

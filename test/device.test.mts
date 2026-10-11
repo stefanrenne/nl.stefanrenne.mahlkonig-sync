@@ -22,7 +22,8 @@ function createFakeClient() {
 type FakeClient = ReturnType<typeof createFakeClient>
 
 type DeviceMethods = Pick<InstanceType<typeof E64WSDevice>,
-  'onInit' | 'tick' | 'poll' | 'lastGrindWithin' | 'onSettings' | 'updateCredentials' | 'onDeleted' | 'widgetTimeline'>
+  'onInit' | 'tick' | 'poll' | 'lastGrindWithin' | 'onSettings' | 'updateCredentials' | 'onDeleted' | 'widgetTimeline'
+  | 'checkPresence' | 'onDiscoveryResult' | 'onDiscoveryAvailable' | 'onDiscoveryAddressChanged'>
 type Harness = DeviceMethods & {
   capabilities: string[]
   capabilityValues: Map<string, unknown>
@@ -37,6 +38,8 @@ type Harness = DeviceMethods & {
 let homey: FakeHomey
 let card: (id: string) => FakeCard
 let client: FakeClient
+/** Stands in for the network: whether a probed address answers, and which addresses were probed. */
+const network = { online: false, probed: [] as string[], hostAddress: null as string | null, lookedUp: [] as string[][] }
 
 function createDevice(store: Record<string, unknown> = { email: 'user@example.com', password: 'secret' }): Harness {
   class TestDevice extends E64WSDevice {
@@ -45,6 +48,17 @@ function createDevice(store: Record<string, unknown> = { email: 'user@example.co
     createClient(credentials: unknown) {
       this.clients.push(credentials)
       return client as unknown as SyncClient
+    }
+
+    // Never touch the real network in tests (discovery stays real: it's pure).
+    protected async probe(address: string) {
+      network.probed.push(address)
+      return network.online
+    }
+
+    protected async lookupHost(names: string[]) {
+      network.lookedUp.push(names)
+      return network.hostAddress
     }
   }
   const Constructor = TestDevice as unknown as new (homey: FakeHomey, options: object) => Harness
@@ -86,6 +100,10 @@ beforeEach(() => {
   vi.setSystemTime(new Date('2026-10-02T07:30:00Z'))
   ;({ homey, card } = createFakeHomey())
   client = createFakeClient()
+  network.online = false
+  network.probed = []
+  network.hostAddress = null
+  network.lookedUp = []
 })
 
 afterEach(() => {
@@ -547,5 +565,114 @@ describe('upgrading devices paired with an older version', () => {
     expect(card('grind_completed').trigger).not.toHaveBeenCalled()
     expect(device.widgetTimeline(5)).toHaveLength(2)
     expect(homey.api.realtime).toHaveBeenCalled()
+  })
+})
+
+describe('Availability from the local network', () => {
+  const announcement = (name: string, address: string) =>
+    ({ name, address, host: `${name}.local`, fullname: `${name}._workstation._tcp.local` }) as unknown as Parameters<Harness['onDiscoveryResult']>[0]
+
+  it('recognises its own mDNS announcement by device id', async () => {
+    const device = createDevice()
+
+    expect(device.onDiscoveryResult(announcement('hemrohsgGRINDER-1 [00:00:00:00:00:00]', '192.168.1.155'))).toBe(true)
+    expect(device.onDiscoveryResult(announcement('hemrohsgGRINDER-2 [00:00:00:00:00:00]', '192.168.1.156'))).toBe(false)
+    expect(device.onDiscoveryResult(announcement('somethingelse', '192.168.1.157'))).toBe(false)
+  })
+
+  it('stores the discovered address in the IP setting and is available while the grinder answers', async () => {
+    const device = createDevice()
+    await device.onInit()
+
+    device.onDiscoveryAvailable(announcement('hemrohsgGRINDER-1 [00:00:00:00:00:00]', '192.168.1.155'))
+    await vi.waitFor(() => expect(device.available).toBe(false))
+    expect(device.unavailableMessage).toBe('errors.grinderOffline')
+    expect(device.settings.ip_address).toBe('192.168.1.155')
+    expect(network.probed.at(-1)).toBe('192.168.1.155')
+
+    network.online = true
+    await device.checkPresence()
+    expect(device.available).toBe(true)
+
+    device.onDiscoveryAddressChanged(announcement('hemrohsgGRINDER-1 [00:00:00:00:00:00]', '192.168.1.160'))
+    await vi.waitFor(() => expect(device.settings.ip_address).toBe('192.168.1.160'))
+  })
+
+  it('falls back to the grinder\'s .local host name when mDNS discovery finds nothing', async () => {
+    network.hostAddress = '192.168.1.155'
+    network.online = true
+    const device = createDevice()
+    await device.onInit()
+
+    await device.checkPresence()
+
+    expect(network.lookedUp.at(-1)).toEqual(['hemrohsgGRINDER-1.local'])
+    expect(device.settings.ip_address).toBe('192.168.1.155')
+    expect(device.available).toBe(true)
+  })
+
+  it('uses the IP setting until the grinder is discovered, and is unavailable when it doesn\'t answer', async () => {
+    const device = createDevice()
+    device.settings.ip_address = '192.168.1.155'
+    await device.onInit()
+
+    await device.checkPresence()
+
+    expect(network.probed.at(-1)).toBe('192.168.1.155')
+    expect(device.available).toBe(false)
+    expect(device.unavailableMessage).toBe('errors.grinderOffline')
+  })
+
+  it('shows a cloud problem before being offline, and stays unavailable while either lasts', async () => {
+    client.findGrindEvents.mockRejectedValueOnce(new SyncAuthError())
+    const device = createDevice()
+    device.settings.ip_address = '192.168.1.155'
+    await device.onInit()
+    await device.checkPresence()
+
+    await device.tick()
+    expect(device.unavailableMessage).toBe('errors.auth')
+
+    // The cloud works again, but the grinder still doesn't answer.
+    await device.tick()
+    expect(device.available).toBe(false)
+    expect(device.unavailableMessage).toBe('errors.grinderOffline')
+
+    network.online = true
+    await device.checkPresence()
+    expect(device.available).toBe(true)
+  })
+
+  it('checks every 30 seconds, again shortly after the IP setting changes, and stops when deleted', async () => {
+    const device = createDevice()
+    await device.onInit()
+    expect(homey.setInterval.mock.calls.at(-1)?.[1]).toBe(30_000)
+
+    await device.onSettings({ newSettings: { ip_address: '192.168.1.2' }, changedKeys: ['ip_address'] })
+    expect(homey.setTimeout.mock.calls.at(-1)?.[1]).toBe(1_000)
+
+    device.onDeleted()
+    expect(homey.clearInterval).toHaveBeenCalled()
+  })
+
+  it('never fails because of the presence check', async () => {
+    const device = createDevice() as Harness & { probe(address: string): Promise<boolean> }
+    device.settings.ip_address = '192.168.1.155'
+    device.probe = async () => {
+      throw new Error('socket exploded')
+    }
+    await device.onInit()
+
+    await expect(device.checkPresence()).resolves.toBeUndefined()
+    expect(JSON.stringify(device.errors)).toContain('Presence check failed')
+  })
+
+  it('removes the Online capability from devices paired with the earlier build', async () => {
+    const device = createDevice()
+    device.capabilities.push('online')
+
+    await device.onInit()
+
+    expect(device.capabilities).not.toContain('online')
   })
 })

@@ -1,7 +1,9 @@
 {
   "errors": {
     "auth": "Mahlkönig Sync heeft je e-mailadres of wachtwoord geweigerd. Repareer het apparaat om opnieuw in te loggen.",
-    "unreachable": "Mahlkönig Sync is niet bereikbaar: __message__"
+    "unreachable": "Mahlkönig Sync is niet bereikbaar: __message__",
+    "grinderOffline": "De molen staat uit of is niet op je netwerk.",
+    "scaleOffline": "De Sync Scale staat uit."
   },
   "pair": {
     "unreachable": "Mahlkönig Sync is niet bereikbaar. Controleer je internetverbinding en probeer het opnieuw.",

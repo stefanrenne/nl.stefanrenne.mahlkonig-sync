@@ -54,5 +54,27 @@
         "value": "-"
       }
     ]
+  },
+  {
+    "type": "group",
+    "label": {
+      "en": "Network",
+      "nl": "Netwerk"
+    },
+    "children": [
+      {
+        "id": "ip_address",
+        "type": "text",
+        "label": {
+          "en": "IP address",
+          "nl": "IP-adres"
+        },
+        "value": "",
+        "hint": {
+          "en": "Found automatically through its network name SyncScale (if your router publishes device names) and used to show whether the scale is on. Enter it yourself if it isn't found; a fixed address in your router helps.",
+          "nl": "Wordt automatisch gevonden via de netwerknaam SyncScale (als je router apparaatnamen doorgeeft) en gebruikt om te tonen of de scale aan staat. Vul het zelf in als het niet gevonden wordt; een vast adres in je router helpt."
+        }
+      }
+    ]
   }
 ]

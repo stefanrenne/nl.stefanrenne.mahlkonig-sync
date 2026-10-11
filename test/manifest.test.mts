@@ -93,7 +93,7 @@ describe('drivers', () => {
 
   it('capabilities removed from existing devices are still defined, or Homey refuses to remove them', () => {
     // drivers/e64ws/device.mts REMOVED_CAPABILITIES
-    for (const capability of ['disc_usage', 'disc_health']) {
+    for (const capability of ['disc_usage', 'disc_health', 'online']) {
       expect(manifest.capabilities[capability], capability).toBeDefined()
       for (const driver of manifest.drivers as { capabilities: string[] }[]) {
         expect(driver.capabilities).not.toContain(capability)

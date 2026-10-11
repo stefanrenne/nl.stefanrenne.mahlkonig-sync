@@ -69,6 +69,9 @@ export function createFakeHomey() {
     // The device schedules its own polls; tests call tick()/poll() directly.
     setTimeout: vi.fn((_callback: () => void, _ms: number) => ({}) as NodeJS.Timeout),
     clearTimeout: vi.fn(),
+    // The presence check runs on an interval; tests call checkPresence() directly.
+    setInterval: vi.fn((_callback: () => void, _ms: number) => ({}) as NodeJS.Timeout),
+    clearInterval: vi.fn(),
   }
 
   return { homey, card, cards, devices, widgetAutocomplete }

@@ -9,7 +9,7 @@ Vitest runs the `.mts` sources directly. `npm test` first type-checks the tests
 |---|---|
 | `vitest.config.mjs` | Aliases `homey` (only exists inside the Homey runtime) to `test/mocks/homey.mts`. |
 | `test/mocks/homey.mts` | `App`, `Device`, `Driver` stand-ins. The `Device` keeps capabilities, values, settings, store (JSON-copied like Homey's) and availability in plain fields, and records `error()` calls in `errors`. `setCapabilityValue` throws for a capability the device doesn't have. |
-| `test/helpers/fake-homey.mts` | `createFakeHomey()`: flow cards (`FakeCard` with a `trigger` spy, `tokens()` and `run()`), `__` returning the key (plus placeholders as JSON), `i18n.getLanguage() = 'en'`, `clock.getTimezone() = 'Europe/Amsterdam'`, `setTimeout`/`clearTimeout` spies, an `api.realtime` spy, `drivers.getDriver(id).getDevices()` backed by the returned `devices` map, and `dashboards.getWidget()` that records autocomplete listeners in `widgetAutocomplete`. Loads the real generated `app.json` as `manifest`. |
+| `test/helpers/fake-homey.mts` | `createFakeHomey()`: flow cards (`FakeCard` with a `trigger` spy, `tokens()` and `run()`), `__` returning the key (plus placeholders as JSON), `i18n.getLanguage() = 'en'`, `clock.getTimezone() = 'Europe/Amsterdam'`, `setTimeout`/`clearTimeout` and `setInterval`/`clearInterval` spies, an `api.realtime` spy, `drivers.getDriver(id).getDevices()` backed by the returned `devices` map, and `dashboards.getWidget()` that records autocomplete listeners in `widgetAutocomplete`. Loads the real generated `app.json` as `manifest`. |
 | `test/fixtures/*.json` | Real responses from the official app (grind events with the maintainer's purge and 20 g shot, last events, device record, scale binding, scale list, brew events with and without a grind link), with every identifier replaced by a fake one. |
 | `test/tsconfig.json` | Extends the root config with `noEmit` and `rootDir: ".."`, and re-declares `exclude` (the root excludes `test/`). |
 | `.homeyignore` | Keeps `test/`, `scripts/`, `docs/`, `probe-output/` and the configs out of the app bundle. |
@@ -25,6 +25,7 @@ Vitest runs the `.mts` sources directly. `npm test` first type-checks the tests
 | `test/scale.test.mts` | The Sync Scale: capabilities (no dose/ratio), baseline, poll window, trigger tokens and order, age limit, restarts, errors; pairing with serial and paired-grinder labels, no scales, repair. |
 | `test/summary.test.mts` | The widget timeline: the maintainer's day of 2026-10-02 as the official app shows it (one grind matched with its shot, deviations from the 20 g target, "1: -" for a 0 g grind), the entry count, the ratio, the 15-minute matching window, one shot per grind, never a grind after the shot, duplicates and nulls, and the list from a stored state. |
 | `test/widget.test.mts` | The widget API (`getTimeline` for the chosen grinder with its count, the count fallback, unknown device) and the grinder picker in `app.mts`. |
+| `test/presence.test.mts` | `probeHost` (accepted and refused = online, time-out and unreachable = offline), `lookupFirst`, `isGrinderAnnouncement` (name/host/full name, case, id 1 vs 10). |
 | `test/manifest.test.mts` | Every compose file translated into every locale, no empty args/tokens (including driver flow cards), `app.json` matches the compose card ids, every driver capability is defined, the runtime scale capabilities exist, every image exists, locale keys match, a README per language, versions in sync, a changelog entry for the current version, and per widget: in `app.json` with its api routes, previews and page present. |
 
 ## Conventions
@@ -36,3 +37,6 @@ Vitest runs the `.mts` sources directly. `npm test` first type-checks the tests
 - Assert on translation keys (`errors.auth`, `pair.unreachable`), not on English text.
 - Known bugs get an `it.todo` with a pointer to TODO.md; a fix replaces it with a real test.
 - Regression tests are named `(regression <hash>)`.
+
+- Device tests never touch the network: the test subclasses override `probe()` (and the scale's
+  `resolveAddress()`) with a controllable `network` stand-in.

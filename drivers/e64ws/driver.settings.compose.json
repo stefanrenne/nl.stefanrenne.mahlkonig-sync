@@ -92,5 +92,27 @@
         "value": "-"
       }
     ]
+  },
+  {
+    "type": "group",
+    "label": {
+      "en": "Network",
+      "nl": "Netwerk"
+    },
+    "children": [
+      {
+        "id": "ip_address",
+        "type": "text",
+        "label": {
+          "en": "IP address",
+          "nl": "IP-adres"
+        },
+        "value": "",
+        "hint": {
+          "en": "Found automatically on your network (the grinder announces itself via mDNS) and used to show whether the grinder is online. Enter it yourself only if it isn't found.",
+          "nl": "Wordt automatisch op je netwerk gevonden (de molen kondigt zich aan via mDNS) en gebruikt om te tonen of de molen online is. Vul het alleen zelf in als het niet gevonden wordt."
+        }
+      }
+    ]
   }
 ]

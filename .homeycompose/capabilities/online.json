@@ -1,0 +1,19 @@
+{
+  "type": "boolean",
+  "title": {
+    "en": "Online",
+    "nl": "Online"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "insights": true,
+  "insightsTitleTrue": {
+    "en": "Came online",
+    "nl": "Kwam online"
+  },
+  "insightsTitleFalse": {
+    "en": "Went offline",
+    "nl": "Ging offline"
+  }
+}

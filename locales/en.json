@@ -1,7 +1,9 @@
 {
   "errors": {
     "auth": "Mahlkönig Sync rejected your e-mail or password. Repair the device to sign in again.",
-    "unreachable": "Can't reach Mahlkönig Sync: __message__"
+    "unreachable": "Can't reach Mahlkönig Sync: __message__",
+    "grinderOffline": "The grinder is off or not on your network.",
+    "scaleOffline": "The Sync Scale is switched off."
   },
   "pair": {
     "unreachable": "Can't reach Mahlkönig Sync. Check your internet connection and try again.",

@@ -38,7 +38,8 @@ client), `test/events.test.mts` (parsing, purges, new-event detection), `test/de
 `test/driver.test.mts` (grinder pairing, repair, condition, and the shared `lib/SyncDriver.mts`),
 `test/scale.test.mts` (the Sync Scale device and driver), `test/summary.test.mts` (the widget's
 timeline and grind/shot matching), `test/widget.test.mts` (widget API and grinder picker),
-`test/manifest.test.mts` (compose files, translations, versions). Only change existing assertions
+`test/presence.test.mts` (network presence helpers), `test/manifest.test.mts` (compose files,
+translations, versions). Only change existing assertions
 when the behaviour change is intended, and say so in the commit. See docs/testing.md.
 
 Fixtures in `test/fixtures/` are real responses from the official app's traffic with every
@@ -104,11 +105,12 @@ When finishing a feature, check both before committing.
 
 - `.homeycompose/app.json` (id, version, name, images, contributors)
 - `.homeycompose/capabilities/*.json` (all custom capabilities, including the Sync Scale ones the
-  device adds at runtime, and `disc_usage` / `disc_health`, which no driver lists but which must
+  device adds at runtime, and `disc_usage` / `disc_health` / `online`, which no driver lists but which must
   stay defined so existing devices can have them removed: never delete a capability definition
   that a migration removes)
 - `drivers/<id>/driver.compose.json` (class, capabilities, pairing and repair views), for `e64ws`
-  and `sync-scale`
+  and `sync-scale`; the grinder's `"discovery": "e64ws"` refers to `.homeycompose/discovery/e64ws.json`
+  (mDNS `_workstation._tcp`)
 - `drivers/<id>/driver.settings.compose.json` (device settings and read-only labels)
 - `drivers/<id>/driver.flow.compose.json` (all flow cards: they are device cards, so the device
   argument is added automatically; there is no `.homeycompose/flow/`). Card ids are app-wide:
@@ -144,6 +146,12 @@ When finishing a feature, check both before committing.
   grinder device's stored state through `widgetTimeline()` (`lib/summary.mts`, pure) and never
   calls the cloud. The grinder emits `espresso.updated` after
   a poll that changed something; `app.mts` registers the widget's grinder picker.
+- **`lib/presence.mts`** + `SyncDevice.checkPresence()`: every 30 s a TCP probe on port 80 of the
+  device's local address (grinder: mDNS discovery `hemrohsg<deviceId>` or `hemrohsg<deviceId>.local`;
+  scale: the router's DNS name `SyncScale`), stored in the `ip_address` setting. No answer makes the
+  device unavailable; `applyAvailability()` combines that with cloud errors (the cloud's message
+  wins). No `online` capability: it was replaced by availability and its definition only stays for
+  the migration that removes it.
 - Credentials live in the device store (`email`, `password`) and are never logged. Tokens live only
   in memory.
 

@@ -25,8 +25,8 @@ the new credentials, creates a new client and polls immediately.
 | Event | What happens |
 |---|---|
 | `onInit` | Gets the two trigger cards, creates a `SyncClient` from the store, schedules a poll at 0 ms. |
-| Poll succeeds | `failures = 0`, `setAvailable()` if needed, next poll after `poll_interval` minutes. |
-| Poll fails | `failures += 1`, `setUnavailable()` with `errors.auth` (for `SyncAuthError`) or `errors.unreachable` (with the error message), next poll after `poll_interval × 2^failures`, capped at 30 minutes. |
+| Poll succeeds | `failures = 0`, the cloud problem is cleared (available again unless the device is offline, see below), next poll after `poll_interval` minutes. |
+| Poll fails | `failures += 1`, unavailable with `errors.auth` (for `SyncAuthError`) or `errors.unreachable` (with the error message), next poll after `poll_interval × 2^failures`, capped at 30 minutes. |
 | `onSettings` with `poll_interval` changed | Reschedules with the new interval. |
 | `onUninit` / `onDeleted` | Stops the timer; no further polls. |
 
@@ -98,6 +98,34 @@ one grind and use `showOrClear()`: an unknown value (an unweighed grind, a recip
 clears the capability instead of keeping the previous grind's value. The other capabilities use
 `show()`, which only writes known values that changed.
 
+## Availability from the local network
+
+Shared with the Sync Scale (`lib/SyncDevice.mts` `checkPresence`, `lib/presence.mts`), every
+30 seconds (`homey.setInterval`) and once at start-up:
+
+1. **Address**: `resolveAddress()`. For the grinder this is the address of its mDNS announcement:
+   the driver has a discovery strategy (`.homeycompose/discovery/e64ws.json`: `mdns-sd`,
+   `_workstation._tcp`, no conditions), and `onDiscoveryResult` accepts the announcement whose
+   name is `hemrohsg` + this device's id (`isGrinderAnnouncement`, the id must end there).
+   `onDiscoveryAvailable` / `AddressChanged` / `LastSeenChanged` keep the address and re-check.
+   Without a discovery result it looks up the grinder's mDNS host name `hemrohsg<id>.local`
+   (works when the Homey's resolver does mDNS). The driver logs every `_workstation._tcp`
+   announcement it sees (start-up and new ones) to diagnose discovery.
+2. A found address that differs from the `ip_address` setting is **written to that setting**.
+   Without a found address the setting is used (the last known address, or one the user entered).
+3. **Probe**: a TCP connection to port 80 (`probeHost`, 3 s). Accepted or refused means online
+   (the grinder accepts, the scale refuses); a time-out or unreachable host means offline. A Homey
+   app can't ping.
+4. **Availability** (`applyAvailability`): the device is available only when the cloud can be read
+   (last poll succeeded) **and** it answers locally. A cloud problem's message wins
+   (`errors.auth` / `errors.unreachable`); otherwise an offline device shows `errors.grinderOffline`
+   ("off or not on your network") or, for the scale, `errors.scaleOffline`. Without any known
+   address the device counts as present: unknown is not offline. `setUnavailable` is only called
+   when the message changes. Errors are logged; the check never throws.
+
+Changing `ip_address` re-checks after 1 s. An earlier build showed this as an `online` capability;
+`onInit` removes it from such devices (its definition stays in `.homeycompose/capabilities/`).
+
 ## Settings
 
 | Id | Type | Default | Notes |
@@ -105,6 +133,7 @@ clears the capability instead of keeping the previous grind's value. The other c
 | `poll_interval` | number, minutes | 2 | Min 1, max 60 |
 | `purge_threshold` | number, g | 5 | Min 0, max 50, step 0.5 |
 | `model`, `serial`, `firmware`, `scale` | label | `-` | Written by the status refresh |
+| `ip_address` | text | empty | Group "Network". Written when the grinder is discovered via mDNS; used when it isn't. |
 
 ## Known issues
 
