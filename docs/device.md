@@ -131,6 +131,10 @@ Shared with the Sync Scale (`lib/SyncDevice.mts` `checkPresence`, `lib/presence.
    warning. Without any known address the device counts as present: unknown is not offline.
    `setUnavailable` / `setWarning` are only called when the message changes. Errors are logged;
    the check never throws.
+5. **Last seen**: when the probe answered, `setLastSeenAt()` (Homey ≥ 12.6.1, the app's
+   `compatibility`; not in `@types/homey` yet, hence a cast in `markSeen()`), so Homey shows when
+   the device was last on the network. Not after a successful cloud poll: that only proves the
+   cloud answers, not the device.
 
 Changing `ip_address` re-checks after 1 s. An earlier build showed this as an `online` capability;
 `onInit` removes it from such devices (its definition stays in `.homeycompose/capabilities/`).

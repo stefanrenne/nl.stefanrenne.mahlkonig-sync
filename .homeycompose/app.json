@@ -1,7 +1,7 @@
 {
   "id": "nl.stefanrenne.mahlkonig-sync",
   "version": "1.0.0",
-  "compatibility": ">=12.1.2",
+  "compatibility": ">=12.6.1",
   "sdk": 3,
   "platforms": [
     "local"

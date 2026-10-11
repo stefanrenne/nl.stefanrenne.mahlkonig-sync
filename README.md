@@ -15,7 +15,7 @@ It only **reads** data: it can't start a grind or change the grinder's settings.
 
 ## Installation
 
-1. Install the app on your Homey Pro.
+1. Install the app on your Homey Pro (Homey 12.6.1 or newer).
 2. Go to **Devices → + → Mahlkönig Sync → E64 WS**.
 3. Sign in with the e-mail address and password of your Mahlkönig Sync account (the account you use
    in the Sync app).
@@ -106,8 +106,8 @@ didn't weigh (0.0 g) is not a purge: its dose is shown as unknown.
 
 The grinder shows as **unavailable** (greyed out, with a message) while it's switched off or not on
 your network, checked every 30 seconds. The Sync Scale shows a **warning** instead ("The Sync Scale
-is switched off"), so its last shot stays visible. Both are unavailable while the Mahlkönig Sync
-cloud can't be reached.
+is switched off"), so its last shot stays visible. Homey also shows when each device was last seen
+on your network. Both are unavailable while the Mahlkönig Sync cloud can't be reached.
 For this they find their IP address on your network automatically and show it in the **IP address**
 setting: the grinder announces itself (mDNS), the scale is looked up by its network name
 `SyncScale` (this needs a router that publishes device names, like UniFi). If it isn't found, enter

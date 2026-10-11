@@ -86,8 +86,12 @@ export default abstract class SyncDevice extends Homey.Device {
         await this.setSettings({ ip_address: detected });
       }
       const address = detected ?? configured;
-      this.offline = address === null ? false : !(await this.probe(address));
+      const answered = address === null ? null : await this.probe(address);
+      this.offline = answered === false;
       await this.applyAvailability();
+      if (answered === true) {
+        await this.markSeen();
+      }
     } catch (error) {
       this.error('Presence check failed:', error instanceof Error ? error.message : error);
     }
@@ -115,6 +119,15 @@ export default abstract class SyncDevice extends Homey.Device {
       await this.setUnavailable(message);
       this.unavailableMessage = message;
     }
+  }
+
+  /**
+   * Tells Homey the device just answered on the local network, shown as "last seen". Only after a
+   * probe that answered: a successful cloud poll doesn't mean the device itself is on. Homey has
+   * this since v12.6.1 (the app's minimum); @types/homey doesn't know it yet.
+   */
+  private async markSeen() {
+    await (this as unknown as { setLastSeenAt(): Promise<void> }).setLastSeenAt();
   }
 
   /** Subclass setup that runs before the first poll. */

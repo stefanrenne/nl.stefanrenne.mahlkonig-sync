@@ -43,6 +43,8 @@ probe TCP port 80 (the scale refuses the connection when it's on and doesn't ans
 and show a **warning** ("The Sync Scale is switched off.", `setWarning`) while it doesn't answer.
 The scale stays available: it's off most of the day, and unavailable would hide its last shot behind
 Homey's full-screen "Device unavailable" (`offlineAsWarning`). Cloud errors still make it unavailable.
+While it answers, the check marks it last seen (`setLastSeenAt`), so Homey shows when the scale was
+last on.
 
 Limits: the router has to publish DHCP names, and with two scales on one network the name is
 ambiguous; the user can then enter the address in the setting (a DHCP reservation helps).

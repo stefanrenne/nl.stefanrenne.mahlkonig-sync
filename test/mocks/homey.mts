@@ -23,6 +23,7 @@ class Device {
   available = true
   unavailableMessage: string | undefined
   warning: string | null = null
+  lastSeenCount = 0
   errors: unknown[][] = []
 
   constructor(homey: unknown, options: {
@@ -81,6 +82,10 @@ class Device {
 
   async unsetWarning() {
     this.warning = null
+  }
+
+  async setLastSeenAt() {
+    this.lastSeenCount += 1
   }
 
   getAvailable() {

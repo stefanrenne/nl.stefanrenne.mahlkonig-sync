@@ -31,6 +31,7 @@ type Harness = DeviceMethods & {
   store: Record<string, unknown>
   available: boolean
   unavailableMessage: string | undefined
+  lastSeenCount: number
   errors: unknown[][]
   clients: unknown[]
 }
@@ -641,6 +642,23 @@ describe('Availability from the local network', () => {
     network.online = true
     await device.checkPresence()
     expect(device.available).toBe(true)
+  })
+
+  it('marks the grinder as last seen only when it answers on the network, not after a cloud poll', async () => {
+    const device = createDevice()
+    await device.onInit()
+    await device.checkPresence()
+    await device.tick()
+    expect(device.lastSeenCount).toBe(0) // no address known: nothing to see
+
+    device.settings.ip_address = '192.168.1.155'
+    await device.checkPresence()
+    expect(device.lastSeenCount).toBe(0) // doesn't answer
+
+    network.online = true
+    await device.checkPresence()
+    await device.checkPresence()
+    expect(device.lastSeenCount).toBe(2)
   })
 
   it('checks every 30 seconds, again shortly after the IP setting changes, and stops when deleted', async () => {

@@ -152,7 +152,8 @@ When finishing a feature, check both before committing.
 - **`lib/presence.mts`** + `SyncDevice.checkPresence()`: every 30 s a TCP probe on port 80 of the
   device's local address (grinder: mDNS discovery `hemrohsg<deviceId>` or `hemrohsg<deviceId>.local`;
   scale: the router's DNS name `SyncScale`), stored in the `ip_address` setting. No answer makes the
-  grinder unavailable and gives the scale a warning (`offlineAsWarning`, `setWarning`); `applyAvailability()` combines that with cloud errors (the cloud's message
+  grinder unavailable and gives the scale a warning (`offlineAsWarning`, `setWarning`); an answer
+  calls `setLastSeenAt()` (why the app needs Homey ≥ 12.6.1); `applyAvailability()` combines that with cloud errors (the cloud's message
   wins). No `online` capability: it was replaced by availability and its definition only stays for
   the migration that removes it.
 - Credentials live in the device store (`email`, `password`) and are never logged. Tokens live only

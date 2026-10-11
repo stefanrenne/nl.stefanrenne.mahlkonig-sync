@@ -34,6 +34,7 @@ describe('Sync Scale device', () => {
     available: boolean
     unavailableMessage: string | undefined
     warning: string | null
+    lastSeenCount: number
   }
 
   let client: {
@@ -211,17 +212,21 @@ describe('Sync Scale device', () => {
     expect(device.available).toBe(true)
 
     expect(device.warning).toBeNull()
+    const seen = device.lastSeenCount
+    expect(seen).toBeGreaterThan(0)
 
     // Switched off: still resolvable, but no answer. A warning, not unavailable: the last shot stays visible.
     network.online = false
     await device.checkPresence()
     expect(device.available).toBe(true)
     expect(device.warning).toBe('errors.scaleOffline')
+    expect(device.lastSeenCount).toBe(seen)
 
     network.online = true
     await device.checkPresence()
     expect(device.available).toBe(true)
     expect(device.warning).toBeNull()
+    expect(device.lastSeenCount).toBe(seen + 1)
   })
 
   it('shows a cloud problem as unavailable without the warning, and the warning again once the cloud is back', async () => {
