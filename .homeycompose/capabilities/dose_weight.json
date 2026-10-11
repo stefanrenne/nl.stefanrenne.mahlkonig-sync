@@ -12,5 +12,6 @@
     "nl": "g"
   },
   "decimals": 1,
-  "insights": true
+  "insights": true,
+  "icon": "/assets/capabilities/dose_weight.svg"
 }

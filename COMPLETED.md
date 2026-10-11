@@ -3,6 +3,14 @@
 Finished work with its context, newest first. Check here before re-investigating something that
 sounds familiar.
 
+## Before 1.0.0 (unreleased, 2026-10-11)
+
+- **The scale's on/off state is detectable on the local network** (verified from the maintainer's
+  Mac). Switched on, it refuses a TCP connection on port 80 within ~1 s; switched off, the
+  connection times out (3 s) and it doesn't answer ping, while the router's DNS name `SyncScale`
+  still resolves to the last address. So the probe, not the name look-up, decides. Grinder: port
+  80 accepts the connection. See docs/scale.md, docs/device.md.
+
 ## Before 1.0.0 (unreleased, 2026-10-07)
 
 - **Shots are joined to grinds by the cloud's link, and the widget shows deviations like the

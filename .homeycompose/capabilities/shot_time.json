@@ -12,5 +12,6 @@
     "nl": "s"
   },
   "decimals": 1,
-  "insights": true
+  "insights": true,
+  "icon": "/assets/capabilities/shot_time.svg"
 }

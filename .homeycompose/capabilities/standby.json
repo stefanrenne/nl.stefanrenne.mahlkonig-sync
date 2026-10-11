@@ -15,5 +15,6 @@
   "insightsTitleFalse": {
     "en": "Woke up",
     "nl": "Werd wakker"
-  }
+  },
+  "icon": "/assets/capabilities/standby.svg"
 }

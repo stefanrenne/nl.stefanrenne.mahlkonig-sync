@@ -107,6 +107,16 @@ describe('drivers', () => {
     }
   })
 
+  it('every capability shown on a device has its own icon, and every icon file exists', () => {
+    const shown = new Set((manifest.drivers as { capabilities: string[] }[]).flatMap((driver) => driver.capabilities))
+    for (const capability of [...shown, 'yield_weight', 'shot_time', 'brew_ratio']) {
+      if (SYSTEM_CAPABILITIES.includes(capability)) continue
+      const icon = manifest.capabilities[capability]?.icon as string | undefined
+      expect(icon, capability).toMatch(/^\/assets\/capabilities\/.+\.svg$/)
+      expect(existsSync(join(root, icon!)), icon).toBe(true)
+    }
+  })
+
   it('every image path in app.json exists', () => {
     const paths = [
       ...Object.values(manifest.images as Record<string, string>),

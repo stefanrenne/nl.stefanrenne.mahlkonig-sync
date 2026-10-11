@@ -98,6 +98,12 @@ one grind and use `showOrClear()`: an unknown value (an unweighed grind, a recip
 clears the capability instead of keeping the previous grind's value. The other capabilities use
 `show()`, which only writes known values that changed.
 
+Every custom capability has its own icon, `assets/capabilities/<id>.svg` (`measure_temperature`
+uses Homey's own). Homey fills every shape of a capability icon and ignores strokes,
+`fill="none"` and masks, so the icons are filled shapes only: lines are thin filled capsules and
+holes are cut with `fill-rule="evenodd"`. A target variant is its base icon scaled down with a
+bullseye badge in the corner. `test/manifest.test.mts` checks that every shown capability has one.
+
 ## Availability from the local network
 
 Shared with the Sync Scale (`lib/SyncDevice.mts` `checkPresence`, `lib/presence.mts`), every

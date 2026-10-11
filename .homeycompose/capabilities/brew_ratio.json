@@ -8,5 +8,6 @@
   "setable": false,
   "uiComponent": "sensor",
   "decimals": 2,
-  "insights": true
+  "insights": true,
+  "icon": "/assets/capabilities/brew_ratio.svg"
 }

@@ -12,5 +12,6 @@
   "units": {
     "en": "µm",
     "nl": "µm"
-  }
+  },
+  "icon": "/assets/capabilities/grind_setting_target.svg"
 }

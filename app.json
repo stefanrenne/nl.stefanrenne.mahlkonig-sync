@@ -725,7 +725,8 @@
       "setable": false,
       "uiComponent": "sensor",
       "decimals": 2,
-      "insights": true
+      "insights": true,
+      "icon": "/assets/capabilities/brew_ratio.svg"
     },
     "brew_time_target": {
       "type": "number",
@@ -741,7 +742,8 @@
         "nl": "s"
       },
       "decimals": 1,
-      "insights": true
+      "insights": true,
+      "icon": "/assets/capabilities/brew_time_target.svg"
     },
     "disc_health": {
       "type": "number",
@@ -781,7 +783,8 @@
         "nl": "g"
       },
       "decimals": 1,
-      "insights": true
+      "insights": true,
+      "icon": "/assets/capabilities/dose_target.svg"
     },
     "dose_weight": {
       "type": "number",
@@ -797,7 +800,8 @@
         "nl": "g"
       },
       "decimals": 1,
-      "insights": true
+      "insights": true,
+      "icon": "/assets/capabilities/dose_weight.svg"
     },
     "grind_setting": {
       "type": "number",
@@ -813,7 +817,8 @@
       "units": {
         "en": "µm",
         "nl": "µm"
-      }
+      },
+      "icon": "/assets/capabilities/grind_setting.svg"
     },
     "grind_setting_target": {
       "type": "number",
@@ -829,7 +834,8 @@
       "units": {
         "en": "µm",
         "nl": "µm"
-      }
+      },
+      "icon": "/assets/capabilities/grind_setting_target.svg"
     },
     "grind_time": {
       "type": "number",
@@ -845,7 +851,8 @@
         "nl": "s"
       },
       "decimals": 1,
-      "insights": true
+      "insights": true,
+      "icon": "/assets/capabilities/grind_time.svg"
     },
     "last_grind": {
       "type": "string",
@@ -855,7 +862,8 @@
       },
       "getable": true,
       "setable": false,
-      "uiComponent": "sensor"
+      "uiComponent": "sensor",
+      "icon": "/assets/capabilities/last_grind.svg"
     },
     "last_shot": {
       "type": "string",
@@ -865,7 +873,8 @@
       },
       "getable": true,
       "setable": false,
-      "uiComponent": "sensor"
+      "uiComponent": "sensor",
+      "icon": "/assets/capabilities/last_shot.svg"
     },
     "online": {
       "type": "boolean",
@@ -894,7 +903,8 @@
       },
       "getable": true,
       "setable": false,
-      "uiComponent": "sensor"
+      "uiComponent": "sensor",
+      "icon": "/assets/capabilities/recipe_mode.svg"
     },
     "shot_time": {
       "type": "number",
@@ -910,7 +920,8 @@
         "nl": "s"
       },
       "decimals": 1,
-      "insights": true
+      "insights": true,
+      "icon": "/assets/capabilities/shot_time.svg"
     },
     "standby": {
       "type": "boolean",
@@ -929,7 +940,8 @@
       "insightsTitleFalse": {
         "en": "Woke up",
         "nl": "Werd wakker"
-      }
+      },
+      "icon": "/assets/capabilities/standby.svg"
     },
     "yield_weight": {
       "type": "number",
@@ -945,7 +957,8 @@
         "nl": "g"
       },
       "decimals": 1,
-      "insights": true
+      "insights": true,
+      "icon": "/assets/capabilities/yield_weight.svg"
     }
   },
   "discovery": {
