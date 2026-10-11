@@ -73,6 +73,8 @@ These were the maintainer's calls. Don't file them as bugs or reopen them withou
   router's DNS (scale, `SyncScale`) and is shown in an editable `ip_address` setting. Offline means
   unavailable (Homey's own way to show an unreachable device), not a capability: a first version
   had an `online` capability, replaced the same day at the maintainer's request. An unknown address
-  is not offline. Bluetooth presence was considered and not built.
+  is not offline. For the scale, unavailable proved too prominent (a full-screen "Device
+  unavailable" with a repair button, for a scale that is off most of the day): at the maintainer's
+  request the scale shows a warning (`setWarning`) instead; the grinder stays unavailable. Bluetooth presence was considered and not built.
 - **`.mts` instead of `.ts`.** The brief named `lib/SyncClient.ts`; the file is
   `lib/SyncClient.mts` to match the maintainer's other apps (TypeScript as ES modules).

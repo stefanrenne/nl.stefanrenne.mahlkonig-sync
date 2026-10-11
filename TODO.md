@@ -16,8 +16,9 @@ Status: `[ ]` open, `[~]` in progress, `[?]` needs a decision or verification.
 - [ ] **Availability on the Homey itself**: on 2026-10-11 both devices got their IP address on the
   Homey (scale via DNS, grinder after removing the discovery conditions). Verified from the Mac:
   the switched-off scale doesn't answer (TCP time-out, no ping) while its DNS name still resolves.
-  Still to see on the Homey: the scale's tile greying out within ~30 s with "The Sync Scale is
-  switched off" and recovering, and which way found the grinder (the driver logs the mDNS
+  Unavailable showed on the Homey for the switched-off scale (2026-10-11) and was too prominent:
+  the scale now shows a warning instead. Still to see on the Homey: that warning within ~30 s and
+  disappearing when it's switched on, and which way found the grinder (the driver logs the mDNS
   announcements it sees; remove that log once known).
 - [ ] Add `homeyCommunityTopicId` to `.homeycompose/app.json` once there's a forum topic.
 

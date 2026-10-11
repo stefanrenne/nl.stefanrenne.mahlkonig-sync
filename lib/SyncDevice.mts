@@ -30,6 +30,13 @@ export default abstract class SyncDevice extends Homey.Device {
   private offline = false;
   /** The message last passed to setUnavailable, so repeated checks don't repeat the call. */
   private unavailableMessage: string | null = null;
+  /** The message last passed to setWarning, or null when no warning is shown. */
+  private warningMessage: string | null = null;
+  /**
+   * Show "switched off" as a warning on an available device instead of making it unavailable.
+   * The scale does: it's off most of the day, and unavailable hides its last shot behind a full-screen error.
+   */
+  protected readonly offlineAsWarning: boolean = false;
 
   async onInit() {
     this.client = this.createClient(this.credentials());
@@ -54,7 +61,7 @@ export default abstract class SyncDevice extends Homey.Device {
     return null;
   }
 
-  /** The unavailable message when the device doesn't answer on the local network. */
+  /** The unavailable (or warning) message when the device doesn't answer on the local network. */
   protected abstract offlineMessage(): string;
 
   /** Whether the address answers on the local network. Overridden in tests. */
@@ -86,9 +93,19 @@ export default abstract class SyncDevice extends Homey.Device {
     }
   }
 
-  /** Available only when the cloud can be read and the device answers; a cloud problem's message wins. */
+  /**
+   * Available only when the cloud can be read and the device answers; a cloud problem's message wins.
+   * With `offlineAsWarning`, being offline is a warning on an available device instead.
+   */
   private async applyAvailability() {
-    const message = this.cloudProblem ?? (this.offline ? this.offlineMessage() : null);
+    const offlineMessage = this.offline ? this.offlineMessage() : null;
+    const asWarning = this.offlineAsWarning && this.cloudProblem === null;
+    const message = this.cloudProblem ?? (asWarning ? null : offlineMessage);
+    const warning = asWarning ? offlineMessage : null;
+    if (warning !== this.warningMessage) {
+      await (warning === null ? this.unsetWarning() : this.setWarning(warning));
+      this.warningMessage = warning;
+    }
     if (message === null) {
       if (!this.getAvailable()) {
         await this.setAvailable();

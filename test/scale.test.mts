@@ -33,6 +33,7 @@ describe('Sync Scale device', () => {
     errors: unknown[][]
     available: boolean
     unavailableMessage: string | undefined
+    warning: string | null
   }
 
   let client: {
@@ -198,7 +199,7 @@ describe('Sync Scale device', () => {
     expect(JSON.stringify(device.errors)).toContain('Scale info refresh failed')
   })
 
-  it('finds its address through the router\'s DNS, stores it in the IP setting, and is unavailable while switched off', async () => {
+  it('finds its address through the router\'s DNS, stores it in the IP setting, and shows a warning while switched off', async () => {
     network.address = '192.168.1.35'
     network.online = true
     const device = createDevice()
@@ -209,15 +210,38 @@ describe('Sync Scale device', () => {
     expect(network.probed.at(-1)).toBe('192.168.1.35')
     expect(device.available).toBe(true)
 
-    // Switched off: still resolvable, but no answer.
+    expect(device.warning).toBeNull()
+
+    // Switched off: still resolvable, but no answer. A warning, not unavailable: the last shot stays visible.
     network.online = false
     await device.checkPresence()
-    expect(device.available).toBe(false)
-    expect(device.unavailableMessage).toBe('errors.scaleOffline')
+    expect(device.available).toBe(true)
+    expect(device.warning).toBe('errors.scaleOffline')
 
     network.online = true
     await device.checkPresence()
     expect(device.available).toBe(true)
+    expect(device.warning).toBeNull()
+  })
+
+  it('shows a cloud problem as unavailable without the warning, and the warning again once the cloud is back', async () => {
+    network.address = '192.168.1.35'
+    network.online = false
+    client.findBrewEvents.mockRejectedValueOnce(new SyncAuthError())
+    const device = createDevice()
+    await device.onInit()
+
+    await device.checkPresence()
+    expect(device.warning).toBe('errors.scaleOffline')
+
+    await device.tick()
+    expect(device.available).toBe(false)
+    expect(device.unavailableMessage).toBe('errors.auth')
+    expect(device.warning).toBeNull()
+
+    await device.tick()
+    expect(device.available).toBe(true)
+    expect(device.warning).toBe('errors.scaleOffline')
   })
 
   it('falls back to the IP setting, and stays available when no address is known at all', async () => {
@@ -231,7 +255,8 @@ describe('Sync Scale device', () => {
     await device.checkPresence()
 
     expect(network.probed.at(-1)).toBe('192.168.1.50')
-    expect(device.available).toBe(false)
+    expect(device.available).toBe(true)
+    expect(device.warning).toBe('errors.scaleOffline')
   })
 
   it('goes unavailable on errors and explains rejected credentials', async () => {

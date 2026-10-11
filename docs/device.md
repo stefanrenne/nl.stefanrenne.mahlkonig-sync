@@ -125,9 +125,12 @@ Shared with the Sync Scale (`lib/SyncDevice.mts` `checkPresence`, `lib/presence.
 4. **Availability** (`applyAvailability`): the device is available only when the cloud can be read
    (last poll succeeded) **and** it answers locally. A cloud problem's message wins
    (`errors.auth` / `errors.unreachable`); otherwise an offline device shows `errors.grinderOffline`
-   ("off or not on your network") or, for the scale, `errors.scaleOffline`. Without any known
-   address the device counts as present: unknown is not offline. `setUnavailable` is only called
-   when the message changes. Errors are logged; the check never throws.
+   ("off or not on your network"). A device with `offlineAsWarning` (the scale) stays available
+   while offline and shows the offline message with `setWarning` (`errors.scaleOffline`), removed
+   with `unsetWarning` once it answers; a cloud problem still makes it unavailable, without the
+   warning. Without any known address the device counts as present: unknown is not offline.
+   `setUnavailable` / `setWarning` are only called when the message changes. Errors are logged;
+   the check never throws.
 
 Changing `ip_address` re-checks after 1 s. An earlier build showed this as an `online` capability;
 `onInit` removes it from such devices (its definition stays in `.homeycompose/capabilities/`).

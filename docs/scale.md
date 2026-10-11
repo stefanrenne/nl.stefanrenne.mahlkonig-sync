@@ -40,7 +40,9 @@ like UniFi publish in their DNS (`SyncScale.localdomain`). `resolveAddress()` lo
 and `SyncScale.localdomain` (`lookupFirst`); the rest is the shared presence check in
 `docs/device.md` ("Availability from the local network"): store the address in `ip_address`,
 probe TCP port 80 (the scale refuses the connection when it's on and doesn't answer when it's off),
-and make the device unavailable ("The Sync Scale is switched off.") while it doesn't answer.
+and show a **warning** ("The Sync Scale is switched off.", `setWarning`) while it doesn't answer.
+The scale stays available: it's off most of the day, and unavailable would hide its last shot behind
+Homey's full-screen "Device unavailable" (`offlineAsWarning`). Cloud errors still make it unavailable.
 
 Limits: the router has to publish DHCP names, and with two scales on one network the name is
 ambiguous; the user can then enter the address in the setting (a DHCP reservation helps).

@@ -22,6 +22,7 @@ class Device {
   store: Record<string, unknown>
   available = true
   unavailableMessage: string | undefined
+  warning: string | null = null
   errors: unknown[][] = []
 
   constructor(homey: unknown, options: {
@@ -72,6 +73,14 @@ class Device {
   async setUnavailable(message?: string) {
     this.available = false
     this.unavailableMessage = message
+  }
+
+  async setWarning(message: string) {
+    this.warning = message
+  }
+
+  async unsetWarning() {
+    this.warning = null
   }
 
   getAvailable() {

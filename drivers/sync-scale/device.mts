@@ -47,6 +47,8 @@ export default class SyncScaleDevice extends SyncDevice {
     }
   }
 
+  protected readonly offlineAsWarning = true;
+
   protected offlineMessage(): string {
     return this.homey.__('errors.scaleOffline');
   }
